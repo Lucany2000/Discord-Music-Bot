@@ -99,7 +99,7 @@ async def repeat(ctx):
 @tasks.loop(count=None)
 async def repeater(ctx):
 	if ctx.voice_client.is_playing() is False and ctx.voice_client.is_paused() is False:
-		ctx.voice_client.play(discord.FFmpegPCMAudio(executable="C:/Users/LucaN/FFmpeg/ffmpeg/bin/ffmpeg.exe", source=f"music/{music}"))
+		ctx.voice_client.play(discord.FFmpegPCMAudio(executable="C:/Users/LucaN/FFmpeg/ffmpeg/bin/ffmpeg.exe", source=f"C:/Users/LucaN/Downloads/music/{music}"))
 
 
 @commands.command()
@@ -130,7 +130,7 @@ async def order(ctx):
 		pass
 	if ctx.voice_client is None:
 		await voiceChannel.connect()	
-	ctx.voice_client.play(discord.FFmpegPCMAudio(executable="C:/Users/LucaN/FFmpeg/ffmpeg/bin/ffmpeg.exe", source=f"music/{str(hub[0])}"))		
+	ctx.voice_client.play(discord.FFmpegPCMAudio(executable="C:/Users/LucaN/FFmpeg/ffmpeg/bin/ffmpeg.exe", source=f"C:/Users/LucaN/Downloads/music/{str(hub[0])}"))		
 
 
 @client.command()
@@ -171,7 +171,7 @@ async def play(ctx, song_name):
 				if ctx.voice_client is None:
 					vc = await voiceChannel.connect()			
 				vc = ctx.voice_client		
-				vc.play(discord.FFmpegPCMAudio(executable="C:/Users/LucaN/FFmpeg/ffmpeg/bin/ffmpeg.exe", source=f"music/{song_name}"))
+				vc.play(discord.FFmpegPCMAudio(executable="C:/Users/LucaN/FFmpeg/ffmpeg/bin/ffmpeg.exe", source=f"C:/Users/LucaN/Downloads/music/{song_name}"))
 				await ctx.send("Now playing "+ str(song_name))
 				try:
 					client.add_command(repeat)
