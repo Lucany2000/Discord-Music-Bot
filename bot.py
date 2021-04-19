@@ -11,7 +11,6 @@ import nacl
 import asyncio
 import time
 import tracemalloc
-# import
 
 tracemalloc.start()
 client = commands.Bot(command_prefix = ".")
@@ -19,7 +18,8 @@ member = discord.Client()
 hub = os.listdir("C:/Users/LucaN/Downloads/music")
 dirlen = len(hub)
 msg = None
-music = None
+music = None		
+
 
 @client.event
 async def on_ready():
@@ -122,28 +122,112 @@ async def cmds(ctx):
 async def order(ctx):
 	voiceChannel = discord.utils.get(ctx.guild.voice_channels, name='General')
 	value = 0
+	x = 1
+	song_list_ordered = []
+
 	try:
 		value = ctx.voice_client.is_playing()
 		if value == True:
 			ctx.voice_client.stop()
 	except:
 		pass
-	if ctx.voice_client is None:
-		await voiceChannel.connect()	
-	ctx.voice_client.play(discord.FFmpegPCMAudio(executable="C:/Users/LucaN/FFmpeg/ffmpeg/bin/ffmpeg.exe", source=f"C:/Users/LucaN/Downloads/music/{str(hub[0])}"))		
+
+	for b in hub:
+		if b.endswith(".mp3"):
+			song_list_ordered.append(b)
+		else:
+			pass		
+
+	if ctx.message.author.voice != None:
+		if ctx.voice_client is None:
+			await voiceChannel.connect()
+
+		try:
+			client.add_command(repeat)
+		except:
+			pass
+
+
+		while ctx.voice_client.is_playing() is False and ctx.voice_client.is_paused() is False:
+			print(False)
+			try:
+				ctx.voice_client.stop()
+			except:
+				pass
+
+			if x > 0:
+				try:
+					client.add_command(back)
+				except:
+					pass
+			else:
+				try:
+					client.remove_command(back)
+				except:
+					pass
+			if x < (len(song_list_ordered) - 1):
+				try:
+					client.add_command(skip)
+				except:
+					pass
+			else:
+				try:
+					client.remove_command(skip)
+				except:
+					pass		
+			while x < (len(song_list_ordered)-1):
+				global music
+				music = song_list_ordered[x]	
+				ctx.voice_client.play(discord.FFmpegPCMAudio(executable="C:/Users/LucaN/FFmpeg/ffmpeg/bin/ffmpeg.exe", source=f"C:/Users/LucaN/Downloads/music/{song_list_ordered[x]}"))
+				await ctx.send("Now playing "+ str(song_list_ordered[x]))
+				x+=1
+				print(x)			
+	else:
+		await ctx.send("You are not in the channel")
+
+	# while x < (len(song_list_ordered)-1):
+	# 	if x > 0:
+	# 		try:
+	# 			client.add_command(back)
+	# 		except:
+	# 			pass
+	# 	else:
+	# 		try:
+	# 			client.remove_command(back)
+	# 		except:
+	# 			pass
+	# 	if x < (len(song_list_ordered) - 1):
+	# 		try:
+	# 			client.add_command(skip)
+	# 		except:
+	# 			pass
+	# 	else:
+	# 		try:
+	# 			client.remove_command(skip)
+	# 		except:
+	# 			pass
+	# 	if ctx.voice_client.is_playing() is False and ctx.voice_client.is_paused is False:				
+	# 		global music
+	# 		music = song_list_ordered[x]
+	# 		ctx.voice_client.play(discord.FFmpegPCMAudio(executable="C:/Users/LucaN/FFmpeg/ffmpeg/bin/ffmpeg.exe", source=f"C:/Users/LucaN/Downloads/music/{song_list_ordered[x]}"))
+	# 		await ctx.send("Now playing "+ str(song_list_ordered[x]))
+	# 		x+=1
+	# 	else:
+	# 		continue				
 
 
 @client.command()
 async def songs(ctx):
 	f = open("songs.txt", "w", encoding='utf8')
 	x = 0
+
 	while x < (dirlen - 1):
 		song = str(hub[x])
-		if song.endswith(".jpg"):
-			x+=1
-		else:
+		if song.endswith(".mp3"):
 			z = ''.join(('"',song,'"'))
 			f.write(z+"\n")
+			x+=1
+		else:
 			x+=1
 	f.close()		
 	with open("songs.txt", "rb") as file:
@@ -157,33 +241,71 @@ async def play(ctx, song_name):
 	value = None
 	global music
 	music = song_name
+	song_list = []
+	z = 0
+
+	if ctx.message.author.voice != None:
+		if ctx.voice_client is None:
+			await voiceChannel.connect()
+	else:
+		await ctx.send("You are not in the channel")
+
 	try:
 		value = ctx.voice_client.is_playing()
 		if value == True:
 			ctx.voice_client.stop()
 	except:
-		pass		
-	x = 0
-	while x < (dirlen - 1):
-		song = str(hub[x])
-		if song == song_name:
-			if ctx.message.author.voice != None:
-				if ctx.voice_client is None:
-					vc = await voiceChannel.connect()			
-				vc = ctx.voice_client		
-				vc.play(discord.FFmpegPCMAudio(executable="C:/Users/LucaN/FFmpeg/ffmpeg/bin/ffmpeg.exe", source=f"C:/Users/LucaN/Downloads/music/{song_name}"))
-				await ctx.send("Now playing "+ str(song_name))
-				try:
-					client.add_command(repeat)
-				except:
-					pass	
-			else:
-				await ctx.send("You are not in the channel")
-				break
+		pass			
+
+	word2 = [char for char in song_name]
+	try:
+		if len(word2) <= 0 or str(word2[0]) == " " or song_name.endswith(".mp3") == False:
+			await ctx.send("Sorry I couldn't find that song")
 		else:
-			x+=1
-	if x == (dirlen - 1):
-		await ctx.send("Sorry I couldn't find that song")				
+			pass
+	except IndexError:
+		pass		
+	
+	for b in hub:
+		if b.endswith(".mp3"):
+			song = str(b)
+			word1 = [char for char in song]
+			if word2[0].upper() == word1[0] or word2[0].lower() == word1[0]:
+				song_list.append(b)
+		else:
+			pass
+	for x in range(len(song_list)):
+		count = 0
+		word = [char for char in song_list[x]]
+		if len(word) == len(word2):
+			for y in range(len(word)):
+				if word2[y].upper() == word[y] or word2[y].lower() == word[y]:
+					count+=1
+				else:
+					count+=0
+					
+			if count != len(word2):
+				z += 1
+				continue
+			else:
+				pass						
+		else:
+			z += 1
+			continue							
+
+		if count == len(word2):
+			ctx.voice_client.play(discord.FFmpegPCMAudio(executable="C:/Users/LucaN/FFmpeg/ffmpeg/bin/ffmpeg.exe", source=f"C:/Users/LucaN/Downloads/music/{song_name}"))
+			await ctx.send("Now playing "+ str((song_list[x])))
+			try:
+				client.add_command(repeat)
+			except:
+				pass
+		else:
+			pass
+
+		if z >= (len(song_list)-1):
+			await ctx.send("Sorry I couldn't find that song")
+			break									
 			
 @client.command()
 async def stop(ctx):
@@ -227,7 +349,7 @@ async def resume(ctx):
 @client.command()
 async def test(ctx):
 	# print(ctx.voice_client)
-	repeater.cancel()
+	ctx.voice_client.stop()
 	# print(None)
 	# voiceChannel = discord.utils.get(ctx.guild.voice_channels, name='General')
 	# vc = ctx.voice_client
@@ -238,33 +360,29 @@ async def test(ctx):
 	# 	print(False)
 	# 	time.sleep(5)
 
-def test4():
-	print("Hello")
-
-@client.command()
-async def test3(ctx):
-	print(None)
-	test4()
+# @client.command()
+# async def test3(ctx):
+			 			
 	# if ctx.voice_client.is_paused() == True:
-	# 	print(True)
+	# 	print(True)  
 	# else:
 	# 	print(False)
 
 
-@client.command()
-async def test2(ctx):
-	print("test")
-	# await test2.invoke(ctx)
+# @client.command()
+# async def test2(ctx):
+# 	for x in hub:
 
-	# print(ctx.author.public_flags.all())
-	# voiceChannel = discord.utils.get(ctx.guild.voice_channels, name='General')
-	# await ctx.invoke(client.get_command("test"))
-	# print(cmd_msg(message))
-	# client.add_command(test3)
-	# await test3.invoke(ctx)
-	# test3(ctx = discord.ext.commands.Context)
+# lef = 0
+# rig = 50
+# for zeb in range(100):
+# 	lef += 1
+# 	print(lef)
+# 	while lef > rig:
+# 		print("faster")
+# 		break
 
-
-
-client.run("NzY3ODAwNjc0MjUxMDQ2OTU0.X43MGQ.y9BKD0kVnQZkaBl79Q9t61wxpd4")
+client.run("NzY3ODAwNjc0MjUxMDQ2OTU0.X43MGQ.DPfTGBaA8K8lv-a37-1xwhoE7uM")
 keep_alive()
+
+
