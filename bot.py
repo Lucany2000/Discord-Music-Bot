@@ -147,41 +147,45 @@ async def order(ctx):
 		except:
 			pass
 
-
-		while ctx.voice_client.is_playing() is False and ctx.voice_client.is_paused() is False:
-			print(False)
+	while x < (len(song_list_ordered)-1): 
+		if ctx.voice_client.is_playing() == False and ctx.voice_client.is_paused() == False:
+			print(True)
 			try:
 				ctx.voice_client.stop()
 			except:
+				pass	
+			global music
+			music = song_list_ordered[x]	
+			ctx.voice_client.play(discord.FFmpegPCMAudio(executable="C:/Users/LucaN/FFmpeg/ffmpeg/bin/ffmpeg.exe", source=f"C:/Users/LucaN/Downloads/music/{song_list_ordered[x]}"))
+			await ctx.send("Now playing "+ str(song_list_ordered[x]))
+			x += 1
+			y = x - 1
+			z = x + 1
+
+		else:
+			print(False)	
+
+		if x > 0:
+			try:
+				client.add_command(back)
+			except:
+				pass
+		else:
+			try:
+				client.remove_command(back)
+			except:
 				pass
 
-			if x > 0:
-				try:
-					client.add_command(back)
-				except:
-					pass
-			else:
-				try:
-					client.remove_command(back)
-				except:
-					pass
-			if x < (len(song_list_ordered) - 1):
-				try:
-					client.add_command(skip)
-				except:
-					pass
-			else:
-				try:
-					client.remove_command(skip)
-				except:
-					pass		
-			while x < (len(song_list_ordered)-1):
-				global music
-				music = song_list_ordered[x]	
-				ctx.voice_client.play(discord.FFmpegPCMAudio(executable="C:/Users/LucaN/FFmpeg/ffmpeg/bin/ffmpeg.exe", source=f"C:/Users/LucaN/Downloads/music/{song_list_ordered[x]}"))
-				await ctx.send("Now playing "+ str(song_list_ordered[x]))
-				x+=1
-				print(x)			
+		if x < (len(song_list_ordered) - 1):
+			try:
+				client.add_command(skip)
+			except:
+				pass
+		else:
+			try:
+				client.remove_command(skip)
+			except:
+				pass		
 	else:
 		await ctx.send("You are not in the channel")
 
@@ -242,70 +246,104 @@ async def play(ctx, song_name):
 	global music
 	music = song_name
 	song_list = []
-	z = 0
+	dup_list = []
 
 	if ctx.message.author.voice != None:
 		if ctx.voice_client is None:
 			await voiceChannel.connect()
 	else:
-		await ctx.send("You are not in the channel")
-
-	try:
-		value = ctx.voice_client.is_playing()
-		if value == True:
-			ctx.voice_client.stop()
-	except:
-		pass			
+		await ctx.send("You are not in the channel")		
 
 	word2 = [char for char in song_name]
 	try:
-		if len(word2) <= 0 or str(word2[0]) == " " or song_name.endswith(".mp3") == False:
+		if len(word2) <= 0 or str(word2[0]) == " ":
 			await ctx.send("Sorry I couldn't find that song")
 		else:
 			pass
 	except IndexError:
-		pass		
-	
+		pass				
+
+	count = 0
+	songs = []
+	if song_name.endswith(".mp3"):
+		song_name = song_name.replace(".mp3", "")
+	word1 = "".join(val for val in song_name if val.isalnum() or val == "." or val == "!" or val == "'" or val == " ")	
+	song = word1.lower().split()
+	for i in song:
+		whitesong = "".join((" ",i," "))
+		songs.append(whitesong)
 	for b in hub:
 		if b.endswith(".mp3"):
-			song = str(b)
-			word1 = [char for char in song]
-			if word2[0].upper() == word1[0] or word2[0].lower() == word1[0]:
-				song_list.append(b)
-		else:
-			pass
-	for x in range(len(song_list)):
-		count = 0
-		word = [char for char in song_list[x]]
-		if len(word) == len(word2):
-			for y in range(len(word)):
-				if word2[y].upper() == word[y] or word2[y].lower() == word[y]:
+			b = b.replace(".mp3","")
+			song_list.append(b)			
+
+	for x in song_list:
+		songs_list = set()						
+		word = "".join(val for val in x if val.isalnum() or val == "." or val == "!" or val == "'" or val == " ")
+		v = word.lower().split()
+		for j in v:
+			songsong = "".join((" ",j," "))
+			songs_list.add(songsong)	
+		for y in songs:
+			for c in songs_list:
+				if y in c:
 					count+=1
+					continue
 				else:
 					count+=0
-					
-			if count != len(word2):
-				z += 1
-				continue
+					continue
+
+		if count == len(song):
+			dup_list.append(x)
+			count = 0
+		else:
+			count = 0
+	if len(dup_list) > 1 and len(dup_list) < 76:
+		num = 0
+		while num in range(len(dup_list)):
+			if len(dup_list[num].split()) == len(song):
+				try:
+					value = ctx.voice_client.is_playing()
+					if value == True:
+						ctx.voice_client.stop()
+				except:
+					pass		
+				music = dup_list[num]+".mp3"
+				ctx.voice_client.play(discord.FFmpegPCMAudio(executable="C:/Users/LucaN/FFmpeg/ffmpeg/bin/ffmpeg.exe", source=f"C:/Users/LucaN/Downloads/music/{music}"))
+				await ctx.send("Now playing "+ str((dup_list[num])))
+				try:
+					client.add_command(repeat)
+				except:
+					pass
+				break
 			else:
-				pass						
-		else:
-			z += 1
-			continue							
+				num+=1
 
-		if count == len(word2):
-			ctx.voice_client.play(discord.FFmpegPCMAudio(executable="C:/Users/LucaN/FFmpeg/ffmpeg/bin/ffmpeg.exe", source=f"C:/Users/LucaN/Downloads/music/{song_name}"))
-			await ctx.send("Now playing "+ str((song_list[x])))
-			try:
-				client.add_command(repeat)
-			except:
-				pass
-		else:
+		if num > (len(dup_list)-1):
+			await ctx.send("Here are a couple of songs that share a similar name. Can you specify which one?")
+			for z in dup_list:
+				await ctx.send(str(z))
+
+	elif len(dup_list) > 75:
+		await ctx.send("Sorry I couldn't find that song")
+
+	elif len(dup_list) == 1:
+		try:
+			value = ctx.voice_client.is_playing()
+			if value == True:
+				ctx.voice_client.stop()
+		except:
+			pass		
+		music = dup_list[0]+".mp3"
+		ctx.voice_client.play(discord.FFmpegPCMAudio(executable="C:/Users/LucaN/FFmpeg/ffmpeg/bin/ffmpeg.exe", source=f"C:/Users/LucaN/Downloads/music/{music}"))
+		await ctx.send("Now playing "+ str((dup_list[0])))
+		try:
+			client.add_command(repeat)
+		except:
 			pass
-
-		if z >= (len(song_list)-1):
-			await ctx.send("Sorry I couldn't find that song")
-			break									
+	else:
+		await ctx.send("Sorry I couldn't find that song")
+											
 			
 @client.command()
 async def stop(ctx):
@@ -315,9 +353,21 @@ async def stop(ctx):
 			repeater.cancel()
 		except:
 			pass
+		await ctx.voice_client.stop()	
+	else:
+		await ctx.send("There is nothing playing")
+
+@client.command()
+async def leave(ctx):
+	if ctx.message.author.voice != None:
+		try:
+			client.remove_command(repeat)
+			repeater.cancel()
+		except:
+			pass
 		await ctx.voice_client.disconnect()	
 	else:
-		await ctx.send("There is nothing playing")	
+		await ctx.send("There is nothing playing")				
 
 @client.command()
 async def pause(ctx):
@@ -368,19 +418,34 @@ async def test(ctx):
 	# else:
 	# 	print(False)
 
+zeb = "kamado tanjirou no uta.mp3"
+sed = zeb.replace(".mp3", "")
+zed = sed.lower().split()
+zed.append(".mp3")
 
-# @client.command()
-# async def test2(ctx):
-# 	for x in hub:
+print(zed)
+seb = "Demon Slayer Kimetsu no Yaiba ED (Ep19) Full - Kamado Tanjirou no Uta (Lyrics).mp3"
+deb = seb.lower()
+print(deb)
 
-# lef = 0
-# rig = 50
-# for zeb in range(100):
-# 	lef += 1
-# 	print(lef)
-# 	while lef > rig:
-# 		print("faster")
-# 		break
+num = 0
+for j in zed:
+	if j in deb:
+		num+=1
+	else:
+		num+=0
+if num == len(zed):
+	print(True)	
+
+string = "☆"
+if string.isalnum():
+	print(True)
+
+@client.command()
+async def test2(ctx):
+	for x in hub:
+		print(str(hub.index("Lost in Thoughts All Alone [Remix] Super Smash Bros. Ultimate.mp3")),str(hub.index("Lost in Thoughts All Alone (English Cover).mp3")),str(hub.index("Fire Emblem Fates - Lost in Thoughts All Alone [Full English Version].mp3")) )
+
 
 client.run("NzY3ODAwNjc0MjUxMDQ2OTU0.X43MGQ.DPfTGBaA8K8lv-a37-1xwhoE7uM")
 keep_alive()
