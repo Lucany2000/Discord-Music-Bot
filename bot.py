@@ -222,17 +222,19 @@ async def order(ctx):
 
 @client.command()
 async def songs(ctx):
+	try:
+		os.remove("C:/Users/LucaN/Discord-Music-Bot/songs.txt")
+	except:
+		pass	
 	f = open("songs.txt", "w", encoding='utf8')
 	x = 0
 
-	while x < (dirlen - 1):
+	for x in range(dirlen):
 		song = str(hub[x])
 		if song.endswith(".mp3"):
 			z = ''.join(('"',song,'"'))
 			f.write(z+"\n")
-			x+=1
 		else:
-			x+=1
 	f.close()		
 	with open("songs.txt", "rb") as file:
 		await ctx.send("Ayo! Here's the list of songs:", file=discord.File(file, "songs.txt"))
