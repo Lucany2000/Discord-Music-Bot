@@ -11,6 +11,7 @@ import nacl
 import asyncio
 import time
 import tracemalloc
+import json
 
 tracemalloc.start()
 client = commands.Bot(command_prefix = ".")
@@ -20,6 +21,13 @@ dirlen = len(hub)
 msg = None
 music = None		
 
+def numbers():
+	f = open("C:/Users/LucaN/OneDrive/Desktop/Discord Music Bot/config.json", "r")
+	data = json.load(f)
+	mason = data["token"]
+	f.close()
+	return mason
+	
 
 @client.event
 async def on_ready():
@@ -27,6 +35,15 @@ async def on_ready():
 
 @client.command()
 async def shutdown(ctx):
+	try:
+		# await ctx.invoke(client.get_command("leave"))
+		client.remove_command(repeat)
+		repeater.cancel()
+		await ctx.voice_client.stop()
+		await ctx.voice_client.disconnect()	
+	except:
+		pass
+		
 	sys.exit()	
 
 @client.event
@@ -223,7 +240,7 @@ async def order(ctx):
 @client.command()
 async def songs(ctx):
 	try:
-		os.remove("C:/Users/LucaN/Discord-Music-Bot/songs.txt")
+		os.remove("songs.txt")
 	except:
 		pass	
 	f = open("songs.txt", "w", encoding='utf8')
@@ -235,11 +252,11 @@ async def songs(ctx):
 			z = ''.join(('"',song,'"'))
 			f.write(z+"\n")
 		else:
+			continue
 	f.close()		
 	with open("songs.txt", "rb") as file:
 		await ctx.send("Ayo! Here's the list of songs:", file=discord.File(file, "songs.txt"))
 	f.close()
-		# os.remove("songs.txt")
 
 @client.command()
 async def play(ctx, song_name):
@@ -349,7 +366,7 @@ async def play(ctx, song_name):
 			
 @client.command()
 async def stop(ctx):
-	if ctx.message.author.voice != None:
+	if ctx.message.author.voice != None and ctx.voice_client.is_playing() == True:
 		try:
 			client.remove_command(repeat)
 			repeater.cancel()
@@ -362,14 +379,18 @@ async def stop(ctx):
 @client.command()
 async def leave(ctx):
 	if ctx.message.author.voice != None:
-		try:
-			client.remove_command(repeat)
-			repeater.cancel()
-		except:
-			pass
-		await ctx.voice_client.disconnect()	
+		if ctx.voice_client != None:
+			try:
+				client.remove_command(repeat)
+				repeater.cancel()
+				await ctx.voice_client.stop()
+			except:
+				pass				
+			await ctx.voice_client.disconnect()
+		else:
+			await ctx.send("I'm not there")		
 	else:
-		await ctx.send("There is nothing playing")				
+		await ctx.send("You are not in the channel")				
 
 @client.command()
 async def pause(ctx):
@@ -449,7 +470,7 @@ async def test2(ctx):
 		print(str(hub.index("Lost in Thoughts All Alone [Remix] Super Smash Bros. Ultimate.mp3")),str(hub.index("Lost in Thoughts All Alone (English Cover).mp3")),str(hub.index("Fire Emblem Fates - Lost in Thoughts All Alone [Full English Version].mp3")) )
 
 
-client.run("NzY3ODAwNjc0MjUxMDQ2OTU0.X43MGQ.DPfTGBaA8K8lv-a37-1xwhoE7uM")
+client.run(numbers())
 keep_alive()
 
 
