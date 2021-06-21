@@ -281,45 +281,36 @@ async def play(ctx, song_name):
 	except IndexError:
 		pass				
 
-	count = 0
-	songs = []
 	if song_name.endswith(".mp3"):
-		song_name = song_name.replace(".mp3", "")
-	word1 = "".join(val for val in song_name if val.isalnum() or val == "." or val == "!" or val == "'" or val == " ")	
-	song = word1.lower().split()
-	for i in song:
-		whitesong = "".join((" ",i," "))
-		songs.append(whitesong)
+		song_name = song_name.replace(".mp3", "")	
+	song = song_name.lower().split()
 	for b in hub:
 		if b.endswith(".mp3"):
 			b = b.replace(".mp3","")
 			song_list.append(b)			
 
+	count = 0
 	for x in song_list:
-		songs_list = set()						
-		word = "".join(val for val in x if val.isalnum() or val == "." or val == "!" or val == "'" or val == " ")
-		v = word.lower().split()
-		for j in v:
-			songsong = "".join((" ",j," "))
-			songs_list.add(songsong)	
-		for y in songs:
-			for c in songs_list:
-				if y in c:
-					count+=1
-					continue
-				else:
-					count+=0
-					continue
+		z = x
+		x = x.lower()
+		for y in song:
+			if y in x:
+				count+=1
+				x = x.replace(y, "", 1)
+				continue	
+			else:
+				count+=0
 
 		if count == len(song):
-			dup_list.append(x)
+			dup_list.append(z)
 			count = 0
 		else:
 			count = 0
+
 	if len(dup_list) > 1 and len(dup_list) < 76:
 		num = 0
-		while num in range(len(dup_list)):
-			if len(dup_list[num].split()) == len(song):
+		while num < (len(dup_list)):
+			if len(dup_list[num]) == len(song_name):
 				try:
 					value = ctx.voice_client.is_playing()
 					if value == True:
@@ -337,10 +328,10 @@ async def play(ctx, song_name):
 			else:
 				num+=1
 
-		if num > (len(dup_list)-1):
+		if num == (len(dup_list)):
 			await ctx.send("Here are a couple of songs that share a similar name. Can you specify which one?")
-			for z in dup_list:
-				await ctx.send(str(z))
+			for l in dup_list:
+				await ctx.send(str(l))
 
 	elif len(dup_list) > 75:
 		await ctx.send("Sorry I couldn't find that song")
@@ -443,109 +434,11 @@ async def test(ctx):
 	# else:
 	# 	print(False)
 
-@client.command()
-async def test2(ctx):
-	for x in hub:
-		if "flyers" and "bradio" in "BRADIO-FlyersTVアニメデスパレードOP曲(OFFICIAL VIDEO).mp3".lower():
-			print(True)
-
-@client.command()
-async def play2(ctx, song_name):
-	voiceChannel = discord.utils.get(ctx.guild.voice_channels, name='General')
-	value = None
-	global music
-	music = song_name
-	song_list = []
-	dup_list = []
-
-	if ctx.message.author.voice != None:
-		if ctx.voice_client is None:
-			await voiceChannel.connect()
-	else:
-		await ctx.send("You are not in the channel")		
-
-	word2 = [char for char in song_name]
-	try:
-		if len(word2) <= 0 or str(word2[0]) == " ":
-			await ctx.send("Sorry I couldn't find that song")
-		else:
-			pass
-	except IndexError:
-		pass				
-
-	if song_name.endswith(".mp3"):
-		song_name = song_name.replace(".mp3", "")	
-	song = song_name.lower().split()
-	# print(len(song))
-	for b in hub:
-		if b.endswith(".mp3"):
-			b = b.replace(".mp3","")
-			song_list.append(b)			
-
-	count = 0
-	for x in song_list:
-		z = x
-		x = x.lower()
-		for y in song:
-			if y in x:
-				count+=1
-				x = x.replace(y, "", 1)
-				continue	
-			else:
-				count+=0
-
-		if count == len(song):
-			dup_list.append(z)
-			count = 0
-		else:
-			count = 0
-
-	# print(dup_list, len(dup_list))
-	if len(dup_list) > 1 and len(dup_list) < 76:
-		num = 0
-		while num < (len(dup_list)):
-			if len(dup_list[num]) == len(song_name):
-				try:
-					value = ctx.voice_client.is_playing()
-					if value == True:
-						ctx.voice_client.stop()
-				except:
-					pass		
-				music = dup_list[num]+".mp3"
-				ctx.voice_client.play(discord.FFmpegPCMAudio(executable="C:/Users/LucaN/FFmpeg/ffmpeg/bin/ffmpeg.exe", source=f"C:/Users/LucaN/Downloads/music/{music}"))
-				await ctx.send("Now playing "+ str((dup_list[num])))
-				try:
-					client.add_command(repeat)
-				except:
-					pass
-				break
-			else:
-				num+=1
-
-		if num == (len(dup_list)):
-			await ctx.send("Here are a couple of songs that share a similar name. Can you specify which one?")
-			for l in dup_list:
-				await ctx.send(str(l))
-
-	elif len(dup_list) > 75:
-		await ctx.send("Sorry I couldn't find that song")
-
-	elif len(dup_list) == 1:
-		try:
-			value = ctx.voice_client.is_playing()
-			if value == True:
-				ctx.voice_client.stop()
-		except:
-			pass		
-		music = dup_list[0]+".mp3"
-		ctx.voice_client.play(discord.FFmpegPCMAudio(executable="C:/Users/LucaN/FFmpeg/ffmpeg/bin/ffmpeg.exe", source=f"C:/Users/LucaN/Downloads/music/{music}"))
-		await ctx.send("Now playing "+ str((dup_list[0])))
-		try:
-			client.add_command(repeat)
-		except:
-			pass
-	else:
-		await ctx.send("Sorry I couldn't find that song")					
+# @client.command()
+# async def test2(ctx):
+# 	for x in hub:
+# 		if "flyers" and "bradio" in "BRADIO-FlyersTVアニメデスパレードOP曲(OFFICIAL VIDEO).mp3".lower():
+# 			print(True)					
 
 client.run(numbers())
 keep_alive()
