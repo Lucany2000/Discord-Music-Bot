@@ -12,7 +12,6 @@ import asyncio
 import time
 import tracemalloc
 import json
-import random
 
 tracemalloc.start()
 client = commands.Bot(command_prefix = ".")
@@ -24,7 +23,8 @@ music = None
 curr = None
 order = None
 detect = None
-queue = None		
+queue = None
+check = False		
 
 def numbers():
 	f = open("C:/Users/LucaN/OneDrive/Desktop/Discord Music Bot/config.json", "r")
@@ -153,11 +153,6 @@ async def repeater(ctx):
 async def skip(ctx):
 	if ctx.voice_client.is_playing() is True or ctx.voice_client.is_paused() is True:
 		global detect
-		global curr
-		if curr == len(queue) - 1:
-			curr = -1
-		else:
-			pass	
 		detect = True
 		await ctx.invoke(order)
 	else:
@@ -166,16 +161,11 @@ async def skip(ctx):
 @commands.command()
 async def back(ctx):
 	if ctx.voice_client.is_playing() is True or ctx.voice_client.is_paused() is True:
-		global curr
 		global detect
-		if curr == 0:
-			detect  = True
-			curr = len(queue)-2
-			await ctx.invoke(order)
-		else:
-			detect  = True	
-			curr -=2
-			await ctx.invoke(order)
+		global check
+		check = True
+		detect = True	
+		await ctx.invoke(order)
 	else:
 		pass		
 
@@ -203,8 +193,6 @@ async def order(ctx):
 	if detect is not True:
 		global curr
 		curr = -1
-		global counter
-		counter = 0
 	else:
 		pass
 
@@ -233,8 +221,20 @@ async def order(ctx):
 			pass
 	while curr == -1 or (curr < (len(queue) - 1) and curr > -1) or curr == len(queue)-1:
 		if ctx.voice_client.is_playing() is False and ctx.voice_client.is_paused() is False:
-			curr += 1
-			print(curr)
+			global check
+			if check == True:
+				curr -= 1
+				if curr == -1:
+					curr = len(queue) - 1
+				else:
+					pass
+				check = False		
+			else:
+				curr += 1
+			if curr == len(queue):
+				curr = 0
+			else:
+				pass
 			global music
 			music = queue[curr]
 			try:
@@ -243,16 +243,7 @@ async def order(ctx):
 				pass		
 			ctx.voice_client.play(discord.FFmpegPCMAudio(executable="C:/Users/LucaN/FFmpeg/ffmpeg/bin/ffmpeg.exe", source=f"C:/Users/LucaN/Downloads/music/{music}"))
 			music2 = music.replace(".mp3", "")
-			if counter == 0:
-				await ctx.send("Now playing "+ str(music2))
-			else:
-				await ctx.send(str(music2))	
-			counter+=1
-			if curr == len(queue)-1:
-				curr = -1
-				counter+=1
-			else:
-				pass	
+			await ctx.send("Now playing "+ str(music2))	
 		else:
 			pass
 		try:	
@@ -264,86 +255,6 @@ async def order(ctx):
 			await asyncio.sleep(.1)
 		else:
 			pass						
-
-@client.command()
-async def shuffle(ctx):
-	voiceChannel = discord.utils.get(ctx.guild.voice_channels, name='General')
-	value = 0
-	global queue
-	queue = []
-	order = []
-
-	if ctx.message.author.voice != None:
-		if ctx.voice_client is None:
-			await voiceChannel.connect()
-	else:
-		await ctx.send("You are not in the channel")
-
-	global detect
-	if detect is not True:
-		global curr
-		curr = -1
-		global counter
-		counter = 0
-	else:
-		pass
-
-	try:
-		value = ctx.voice_client.is_playing()
-		if value == True:
-			ctx.voice_client.stop()
-	except:
-		pass	
-
-	for b in hub:
-		if b.endswith(".mp3"):
-			queue.append(b)
-		else:
-			pass
-
-	for x in range(len(queue)):
-		order.append(x)					
-
-	if ctx.message.author.voice != None:
-		if ctx.voice_client is None:
-			await voiceChannel.connect()
-		try:
-			client.add_command(repeat)
-		except:
-			pass
-	while curr == -1 or (curr < (len(queue) - 1) and curr > -1) or curr == len(queue)-1:
-		if ctx.voice_client.is_playing() is False and ctx.voice_client.is_paused() is False:
-			curr += 1
-			print(curr)
-			global music
-			music = queue[curr]
-			try:
-				ctx.voice_client.stop()
-			except:
-				pass		
-			ctx.voice_client.play(discord.FFmpegPCMAudio(executable="C:/Users/LucaN/FFmpeg/ffmpeg/bin/ffmpeg.exe", source=f"C:/Users/LucaN/Downloads/music/{music}"))
-			music2 = music.replace(".mp3", "")
-			if counter == 0:
-				await ctx.send("Now playing "+ str(music2))
-			else:
-				await ctx.send(str(music2))	
-			counter+=1
-			if curr == len(queue)-1:
-				curr = -1
-				counter+=1
-			else:
-				pass	
-		else:
-			pass
-		try:	
-			client.add_command(back)
-			client.add_command(skip)
-		except:
-			pass		
-		if ctx.voice_client.is_playing() is True:
-			await asyncio.sleep(.1)
-		else:
-			pass
 
 @client.command()
 async def songs(ctx):
@@ -374,13 +285,6 @@ async def play(ctx, song_name):
 	music = song_name
 	song_list = []
 	dup_list = []
-
-	try:
-		client.remove_command(back)
-		client.remove_command(skip)
-	except:
-		pass	
-
 
 	if ctx.message.author.voice != None:
 		if ctx.voice_client is None:
