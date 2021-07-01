@@ -244,6 +244,7 @@ async def order(ctx):
 				detect = False		
 			else:
 				curr += 1
+				detect = False
 			if curr == len(queue):
 				curr = 0
 			else:
