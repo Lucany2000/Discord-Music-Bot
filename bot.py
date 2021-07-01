@@ -24,7 +24,9 @@ curr = None
 order = None
 detect = None
 queue = None
-check = False		
+check = False
+toggle = None
+counter = None		
 
 def numbers():
 	f = open("C:/Users/LucaN/OneDrive/Desktop/Discord Music Bot/config.json", "r")
@@ -154,7 +156,10 @@ async def skip(ctx):
 	if ctx.voice_client.is_playing() is True or ctx.voice_client.is_paused() is True:
 		global detect
 		detect = True
-		await ctx.invoke(order)
+		if toggle == 0:	
+			await ctx.invoke(order)
+		elif toggle == 1:
+			await ctx.invoke(shuffle)
 	else:
 		pass
 
@@ -164,8 +169,11 @@ async def back(ctx):
 		global detect
 		global check
 		check = True
-		detect = True	
-		await ctx.invoke(order)
+		detect = True
+		if toggle == 0:	
+			await ctx.invoke(order)
+		elif toggle == 1:
+			await ctx.invoke(shuffle)	
 	else:
 		pass		
 
@@ -178,6 +186,8 @@ async def cmds(ctx):
 @client.command()
 async def order(ctx):
 	voiceChannel = discord.utils.get(ctx.guild.voice_channels, name='General')
+	global toggle
+	toggle = 0
 	value = 0
 	global queue
 	queue = []
@@ -190,9 +200,11 @@ async def order(ctx):
 		await ctx.send("You are not in the channel")
 
 	global detect
+	global counter
 	if detect is not True:
 		global curr
 		curr = -1
+		counter = 0
 	else:
 		pass
 
@@ -228,7 +240,8 @@ async def order(ctx):
 					curr = len(queue) - 1
 				else:
 					pass
-				check = False		
+				check = False
+				detect = False		
 			else:
 				curr += 1
 			if curr == len(queue):
@@ -243,7 +256,11 @@ async def order(ctx):
 				pass		
 			ctx.voice_client.play(discord.FFmpegPCMAudio(executable="C:/Users/LucaN/FFmpeg/ffmpeg/bin/ffmpeg.exe", source=f"C:/Users/LucaN/Downloads/music/{music}"))
 			music2 = music.replace(".mp3", "")
-			await ctx.send("Now playing "+ str(music2))	
+			if counter == 0:
+				await ctx.send("Now playing "+ str(music2))
+			else:
+				await ctx.send(str(music2))
+			counter += 1			
 		else:
 			pass
 		try:	
