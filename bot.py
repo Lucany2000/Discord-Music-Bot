@@ -12,6 +12,7 @@ import asyncio
 import time
 import tracemalloc
 import json
+import random
 
 tracemalloc.start()
 client = commands.Bot(command_prefix = ".")
@@ -21,12 +22,14 @@ dirlen = len(hub)
 msg = None
 music = None
 curr = None
-order = None
 detect = None
 queue = None
 check = False
 toggle = None
-counter = None		
+counter = None
+new_order = None
+p2 = None
+p3 = None		
 
 def numbers():
 	f = open("C:/Users/LucaN/OneDrive/Desktop/Discord Music Bot/config.json", "r")
@@ -135,13 +138,13 @@ async def stop(ctx):
 		await ctx.send("There is nothing playing")
 		
 
-@commands.command()
+@commands.command(aliases = ['f'])
 async def forward(ctx):
 	repeater.stop()
 	client.remove_command(forward)	
 	
 
-@commands.command()
+@commands.command(aliases = ['re'])
 async def repeat(ctx):
 	repeater.start(ctx)
 	client.add_command(forward)
@@ -151,28 +154,31 @@ async def repeater(ctx):
 	if ctx.voice_client.is_playing() is False and ctx.voice_client.is_paused() is False:
 		ctx.voice_client.play(discord.FFmpegPCMAudio(executable="C:/Users/LucaN/FFmpeg/ffmpeg/bin/ffmpeg.exe", source=f"C:/Users/LucaN/Downloads/music/{music}"))
 
-@commands.command()
+@commands.command(aliases = ['>'])
 async def skip(ctx):
 	if ctx.voice_client.is_playing() is True or ctx.voice_client.is_paused() is True:
 		global detect
-		detect = True
-		if toggle == 0:	
+		if toggle == 0:
+			detect = True	
 			await ctx.invoke(order)
 		elif toggle == 1:
+			detect = True
 			await ctx.invoke(shuffle)
 	else:
 		pass
 
-@commands.command()
+@commands.command(aliases = ['<'])
 async def back(ctx):
 	if ctx.voice_client.is_playing() is True or ctx.voice_client.is_paused() is True:
 		global detect
 		global check
-		check = True
-		detect = True
-		if toggle == 0:	
+		if toggle == 0:
+			check = True
+			detect = True	
 			await ctx.invoke(order)
 		elif toggle == 1:
+			check = True
+			detect = True
 			await ctx.invoke(shuffle)	
 	else:
 		pass		
@@ -183,7 +189,7 @@ async def cmds(ctx):
 	for cmd in client.commands:
 		await ctx.send(str(cmd)+"\n")
 
-@client.command()
+@client.command(aliases = ['o'])
 async def order(ctx):
 	voiceChannel = discord.utils.get(ctx.guild.voice_channels, name='General')
 	global toggle
@@ -191,13 +197,15 @@ async def order(ctx):
 	value = 0
 	global queue
 	queue = []
-	order = []
+	global p2
+	global p3
+	p2 = 2
 
 	if ctx.message.author.voice != None:
 		if ctx.voice_client is None:
 			await voiceChannel.connect()
 	else:
-		await ctx.send("You are not in the channel")
+		await ctx.send("You are not in the channel")	
 
 	global detect
 	global counter
@@ -205,6 +213,7 @@ async def order(ctx):
 		global curr
 		curr = -1
 		counter = 0
+		detect = None
 	else:
 		pass
 
@@ -219,10 +228,7 @@ async def order(ctx):
 		if b.endswith(".mp3"):
 			queue.append(b)
 		else:
-			pass
-
-	for x in range(len(queue)):
-		order.append(x)					
+			pass					
 
 	if ctx.message.author.voice != None:
 		if ctx.voice_client is None:
@@ -232,6 +238,14 @@ async def order(ctx):
 		except:
 			pass
 	while curr == -1 or (curr < (len(queue) - 1) and curr > -1) or curr == len(queue)-1:
+		try:
+			while p3 == 3:
+				await asyncio.sleep(.1)
+				p3 = 0
+			else:
+				pass
+		except:
+			pass		
 		if ctx.voice_client.is_playing() is False and ctx.voice_client.is_paused() is False:
 			global check
 			if check == True:
@@ -274,6 +288,114 @@ async def order(ctx):
 		else:
 			pass						
 
+@client.command(aliases = ['s'])
+async def shuffle(ctx):
+	voiceChannel = discord.utils.get(ctx.guild.voice_channels, name='General')
+	global toggle
+	toggle = 1
+	value = 0
+	global queue
+	queue = []
+	order = []
+	global p3 
+	global p2
+	p3 = 3
+
+	if ctx.message.author.voice != None:
+		if ctx.voice_client is None:
+			await voiceChannel.connect()
+	else:
+		await ctx.send("You are not in the channel")
+
+	for b in hub:
+		if b.endswith(".mp3"):
+			queue.append(b)
+		else:
+			pass
+
+	for x in range(len(queue)):
+		order.append(x)
+
+	global detect
+	global counter
+	if detect is not True:
+		global curr
+		global new_order
+		new_order = []
+		curr = -1
+		counter = 0
+		detect = None
+		random.shuffle(order)
+		for y in order:
+			new_order.append(y)
+	else:
+		pass
+
+	try:
+		value = ctx.voice_client.is_playing()
+		if value == True:
+			ctx.voice_client.stop()
+	except:
+		pass	
+
+	if ctx.message.author.voice != None:
+		if ctx.voice_client is None:
+			await voiceChannel.connect()
+		try:
+			client.add_command(repeat)
+		except:
+			pass
+	while curr == -1 or (curr < (len(queue) - 1) and curr > -1) or curr == len(queue)-1:
+		try:
+			while p2 == 2:
+				await asyncio.sleep(.1)
+				p2 = 0
+			else:
+				pass
+		except:
+			pass
+		if ctx.voice_client.is_playing() is False and ctx.voice_client.is_paused() is False:
+			global check
+			if check == True:
+				curr -= 1
+				if curr == -1:
+					curr = len(queue) - 1
+				else:
+					pass
+				check = False
+				detect = False		
+			else:
+				curr += 1
+				detect = False
+			if curr == len(queue):
+				curr = 0
+			else:
+				pass
+			global music
+			music = queue[new_order[curr]]
+			try:
+				ctx.voice_client.stop()
+			except:
+				pass		
+			ctx.voice_client.play(discord.FFmpegPCMAudio(executable="C:/Users/LucaN/FFmpeg/ffmpeg/bin/ffmpeg.exe", source=f"C:/Users/LucaN/Downloads/music/{music}"))
+			music2 = music.replace(".mp3", "")
+			if counter == 0:
+				await ctx.send("Now playing "+ str(music2))
+			else:
+				await ctx.send(str(music2))
+			counter += 1			
+		else:
+			pass
+		try:	
+			client.add_command(back)
+			client.add_command(skip)
+		except:
+			pass		
+		if ctx.voice_client.is_playing() is True:
+			await asyncio.sleep(.1)
+		else:
+			pass
+
 @client.command()
 async def songs(ctx):
 	try:
@@ -295,7 +417,7 @@ async def songs(ctx):
 		await ctx.send("Ayo! Here's the list of songs:", file=discord.File(file, "songs.txt"))
 	f.close()
 
-@client.command()
+@client.command(aliases = ['pl'])
 async def play(ctx, song_name):
 	voiceChannel = discord.utils.get(ctx.guild.voice_channels, name='General')
 	value = None
@@ -304,11 +426,20 @@ async def play(ctx, song_name):
 	song_list = []
 	dup_list = []
 
+	client.remove_command(skip)
+	client.remove_command(back)
+	global toggle
+	toggle = -2
+	global curr
+	curr = -2
+
 	if ctx.message.author.voice != None:
 		if ctx.voice_client is None:
 			await voiceChannel.connect()
 	else:
-		await ctx.send("You are not in the channel")		
+		await ctx.send("You are not in the channel")
+
+					
 
 	word2 = [char for char in song_name]
 	try:
@@ -399,7 +530,6 @@ async def leave(ctx):
 			try:
 				client.remove_command(repeat)
 				repeater.cancel()
-				alpha.cancel()
 				await ctx.voice_client.stop()
 			except:
 				pass				
@@ -409,7 +539,7 @@ async def leave(ctx):
 	else:
 		await ctx.send("You are not in the channel")				
 
-@client.command()
+@client.command(aliases = ['p'])
 async def pause(ctx):
 	if ctx.message.author.voice != None:
 		try:
@@ -422,7 +552,7 @@ async def pause(ctx):
 	else:
 		await ctx.send("You are not in the channel")			
 
-@client.command()
+@client.command(aliases = ['r'])
 async def resume(ctx):
 	if ctx.message.author.voice != None:
 		try:
