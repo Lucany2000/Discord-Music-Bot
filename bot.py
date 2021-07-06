@@ -13,6 +13,11 @@ import time
 import tracemalloc
 import json
 import random
+import eyed3
+import urllib.parse
+
+test_path = urllib.parse.urlparse('http://readycloud.netgear.com/client/index.html#page=access&path=%2Ftmp%2Fmnt%2Fusb0%2Fpart1%2FMedia%2FMusic&deviceid=R6400v2_wnGhq_1459C0A9E4C2').path
+print(test_path)
 
 tracemalloc.start()
 client = commands.Bot(command_prefix = ".")
@@ -45,15 +50,16 @@ async def on_ready():
 
 @client.command()
 async def shutdown(ctx):
-	try:
-		await ctx.voice_client.disconnect()	
-		client.remove_command(repeat)
-		repeater.cancel()
-	except:
-		pass
-
-		
-	sys.exit()	
+	if ctx.message.author.id == ctx.guild.owner_id: 
+		try:
+			await ctx.voice_client.disconnect()	
+			client.remove_command(repeat)
+			repeater.cancel()
+		except:
+			pass		
+		sys.exit()
+	else:
+		await ctx.send("You do not have permission to use this command")		
 
 @client.event
 async def on_command_error(ctx, error):
@@ -568,49 +574,10 @@ async def resume(ctx):
 
 @client.command()
 async def test(ctx):
-	# print(ctx.voice_client)
-	if ctx.voice_client.is_playing() == True:
+	if ctx.message.author.id == "592605224410152970":
 		print(True)
 	else:
-		print(False)
-	if ctx.voice_client.is_paused() == True:
-		print(True)
-	else:
-		print(False)			
-	# ctx.voice_client.stop()
-	# print(None)
-	# voiceChannel = discord.utils.get(ctx.guild.voice_channels, name='General')
-	# vc = ctx.voice_client
-	# if vc.is_paused() == True:
-	# 	print(True)
-	# 	time.sleep(5)
-	# else:
-	# 	print(False)
-	# 	time.sleep(5)
-
-# @client.command()
-# async def test3(ctx):
-			 			
-	# if ctx.voice_client.is_paused() == True:
-	# 	print(True)  
-	# else:
-	# 	print(False)
-
-# @client.command()
-# async def test2(ctx):
-# 	for x in hub:
-# 		if "flyers" and "bradio" in "BRADIO-FlyersTVアニメデスパレードOP曲(OFFICIAL VIDEO).mp3".lower():
-# 			print(True)					
-
-# j = 0
-# while j in range(101):
-# 	if j == -1:
-# 		j = 0
-# 	else:
-# 		print(j)
-# 		j+=1	
-# 	# if j == 100:
-# 	# 	break
+		print(False)				
 
 client.run(numbers())
 keep_alive()
