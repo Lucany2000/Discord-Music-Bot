@@ -14,10 +14,14 @@ import tracemalloc
 import json
 import random
 import eyed3
-import urllib.parse
+import requests
+import selenium
 
-test_path = urllib.parse.urlparse('http://readycloud.netgear.com/client/index.html#page=access&path=%2Ftmp%2Fmnt%2Fusb0%2Fpart1%2FMedia%2FMusic&deviceid=R6400v2_wnGhq_1459C0A9E4C2').path
-print(test_path)
+
+# req = requests.get('http://readycloud.netgear.com/client/index.html')
+# print(dir(req))
+# print(help(req))
+# print(req.text)
 
 tracemalloc.start()
 client = commands.Bot(command_prefix = ".")
@@ -33,8 +37,12 @@ check = False
 toggle = None
 counter = None
 new_order = None
+player = None
 p2 = None
-p3 = None		
+p3 = None
+alpha = None
+number = None
+single_play = None		
 
 def numbers():
 	f = open("C:/Users/LucaN/OneDrive/Desktop/Discord Music Bot/config.json", "r")
@@ -164,11 +172,26 @@ async def repeater(ctx):
 async def skip(ctx):
 	if ctx.voice_client.is_playing() is True or ctx.voice_client.is_paused() is True:
 		global detect
+		global player
 		if toggle == 0:
-			detect = True	
+			detect = True
+			player = True
+			try:
+				value = ctx.voice_client.is_playing()
+				if value == True:
+					ctx.voice_client.stop()
+			except:
+				pass	
 			await ctx.invoke(order)
 		elif toggle == 1:
 			detect = True
+			player = True
+			try:
+				value = ctx.voice_client.is_playing()
+				if value == True:
+					ctx.voice_client.stop()
+			except:
+				pass
 			await ctx.invoke(shuffle)
 	else:
 		pass
@@ -178,13 +201,28 @@ async def back(ctx):
 	if ctx.voice_client.is_playing() is True or ctx.voice_client.is_paused() is True:
 		global detect
 		global check
+		global player
 		if toggle == 0:
 			check = True
-			detect = True	
+			detect = True
+			player = True
+			try:
+				value = ctx.voice_client.is_playing()
+				if value == True:
+					ctx.voice_client.stop()
+			except:
+				pass	
 			await ctx.invoke(order)
 		elif toggle == 1:
 			check = True
 			detect = True
+			player = True
+			try:
+				value = ctx.voice_client.is_playing()
+				if value == True:
+					ctx.voice_client.stop()
+			except:
+				pass
 			await ctx.invoke(shuffle)	
 	else:
 		pass		
@@ -205,36 +243,63 @@ async def order(ctx):
 	queue = []
 	global p2
 	global p3
+	global music
+	global player
+	global curr
+	global alpha
+	global number
+	global single_play
 	p2 = 2
-
+	
 	if ctx.message.author.voice != None:
 		if ctx.voice_client is None:
 			await voiceChannel.connect()
 	else:
-		await ctx.send("You are not in the channel")	
+		await ctx.send("You are not in the channel")
 
 	global detect
 	global counter
-	if detect is not True:
-		global curr
-		curr = -1
-		counter = 0
-		detect = None
-	else:
-		pass
-
-	try:
-		value = ctx.voice_client.is_playing()
-		if value == True:
-			ctx.voice_client.stop()
-	except:
-		pass	
 
 	for b in hub:
 		if b.endswith(".mp3"):
 			queue.append(b)
 		else:
-			pass					
+			pass
+
+	alpha = True		
+
+	if single_play is True or number is True:
+		player = False
+		if player is not True and ctx.voice_client.is_playing() is True or ctx.voice_client.is_paused() is True:
+			if single_play is True:
+				detect = True
+				curr = queue.index(music)
+				counter = 0
+				single_play = False
+			elif number is True:
+				detect = True
+				curr = queue.index(music)
+				number = False
+		else:
+			pass		
+	else:
+		pass				
+
+	if detect is not True:
+		player = True
+		curr = -1
+		counter = 0
+		detect = None
+		try:
+			value = ctx.voice_client.is_playing()
+			if value == True:
+				ctx.voice_client.stop()
+		except:
+			pass
+	else:
+		pass
+
+	player = True
 
 	if ctx.message.author.voice != None:
 		if ctx.voice_client is None:
@@ -269,7 +334,6 @@ async def order(ctx):
 				curr = 0
 			else:
 				pass
-			global music
 			music = queue[curr]
 			try:
 				ctx.voice_client.stop()
@@ -305,6 +369,15 @@ async def shuffle(ctx):
 	order = []
 	global p3 
 	global p2
+	global player
+	global music
+	global curr
+	global new_order
+	global detect
+	global counter
+	global number
+	global alpha
+	global single_play
 	p3 = 3
 
 	if ctx.message.author.voice != None:
@@ -322,11 +395,37 @@ async def shuffle(ctx):
 	for x in range(len(queue)):
 		order.append(x)
 
-	global detect
-	global counter
+	number = True
+
+	if single_play is True or alpha is True:
+		player = False	
+		if player is not True and ctx.voice_client.is_playing() is True or ctx.voice_client.is_paused() is True:
+			if single_play is True:
+				detect = True
+				new_order = []
+				random.shuffle(order)
+				for y in order:
+					new_order.append(y)
+				new_order.insert(0, queue.index(music))	
+				curr = 0
+				counter = 1
+				single_play = False
+			elif alpha is True:
+				detect = True
+				new_order = []
+				random.shuffle(order)
+				for y in order:
+					new_order.append(y)
+				new_order.insert(0, queue.index(music))	
+				curr = 0
+				alpha = False	
+		else:
+			pass
+	else:
+		pass				
+
 	if detect is not True:
-		global curr
-		global new_order
+		player = True
 		new_order = []
 		curr = -1
 		counter = 0
@@ -337,12 +436,7 @@ async def shuffle(ctx):
 	else:
 		pass
 
-	try:
-		value = ctx.voice_client.is_playing()
-		if value == True:
-			ctx.voice_client.stop()
-	except:
-		pass	
+	player = True	
 
 	if ctx.message.author.voice != None:
 		if ctx.voice_client is None:
@@ -351,6 +445,7 @@ async def shuffle(ctx):
 			client.add_command(repeat)
 		except:
 			pass
+
 	while curr == -1 or (curr < (len(queue) - 1) and curr > -1) or curr == len(queue)-1:
 		try:
 			while p2 == 2:
@@ -377,7 +472,6 @@ async def shuffle(ctx):
 				curr = 0
 			else:
 				pass
-			global music
 			music = queue[new_order[curr]]
 			try:
 				ctx.voice_client.stop()
@@ -428,9 +522,12 @@ async def play(ctx, song_name):
 	voiceChannel = discord.utils.get(ctx.guild.voice_channels, name='General')
 	value = None
 	global music
+	global single_play
 	music = song_name
 	song_list = []
 	dup_list = []
+
+	single_play = True
 
 	client.remove_command(skip)
 	client.remove_command(back)
@@ -443,9 +540,7 @@ async def play(ctx, song_name):
 		if ctx.voice_client is None:
 			await voiceChannel.connect()
 	else:
-		await ctx.send("You are not in the channel")
-
-					
+		await ctx.send("You are not in the channel")				
 
 	word2 = [char for char in song_name]
 	try:
