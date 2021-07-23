@@ -17,7 +17,6 @@ import eyed3
 import requests
 import selenium
 
-
 # req = requests.get('http://readycloud.netgear.com/client/index.html')
 # print(dir(req))
 # print(help(req))
@@ -42,7 +41,13 @@ p2 = None
 p3 = None
 alpha = None
 number = None
-single_play = None		
+single_play = None
+kur = None
+queued = []
+slot = []
+prev = None
+loop = None
+length = None	
 
 def numbers():
 	f = open("C:/Users/LucaN/OneDrive/Desktop/Discord Music Bot/config.json", "r")
@@ -227,6 +232,229 @@ async def back(ctx):
 	else:
 		pass		
 
+@client.command(aliases = ['a'])
+async def add(ctx, song_name):
+	voiceChannel = discord.utils.get(ctx.guild.voice_channels, name='General')
+	value = None
+	global music
+	global kur
+	global toggle
+	global counter
+	global curr
+	global new_order
+	global queue
+	global detect
+	global queued
+	global slot
+	global prev
+	global loop
+	global length
+	# music = song_name
+	song_list = []
+	dup_list = []
+	slot2 = []
+
+	length = 0
+
+	for d in hub:
+		if d.endswith(".mp3"):
+			length+=1			
+		else:
+			pass	
+
+				
+	word2 = [char for char in song_name]
+	try:
+		if len(word2) <= 0 or str(word2[0]) == " ":
+			await ctx.send("Sorry I couldn't find that song")
+		else:
+			pass
+	except IndexError:
+		pass				
+
+	if song_name.endswith(".mp3"):
+		song_name = song_name.replace(".mp3", "")	
+	song = song_name.lower().split()
+	for b in hub:
+		if b.endswith(".mp3"):
+			b = b.replace(".mp3","")
+			song_list.append(b)			
+
+	count = 0
+	for x in song_list:
+		z = x
+		x = x.lower()
+		for y in song:
+			if y in x:
+				count+=1
+				x = x.replace(y, "", 1)
+				continue	
+			else:
+				count+=0
+
+		if count == len(song):
+			dup_list.append(z)
+			count = 0
+		else:
+			count = 0
+
+	if len(dup_list) > 1 and len(dup_list) < 76:
+		num = 0
+		while num < (len(dup_list)):
+			if len(dup_list[num]) == len(song_name):		
+				kur = dup_list[num]+".mp3"
+				if ctx.voice_client.is_playing() is True or ctx.voice_client.is_paused() is True:
+					detect = True
+					queued.append(kur) 
+					slot.append(curr+1)
+					try:
+						if len(slot) == 1 and prev == queue.index(queue[-1]) or prev == new_order.index(new_order[-1]):
+							slot.pop(0)
+							slot.append(0)
+						elif len(slot) == 1 and curr+1 == 0:
+							slot.pop(0)
+							slot.append(1)
+						else:	
+							pass
+					except:
+						pass	
+					if len(slot) > 1:		
+						for	k in range(len(slot)-1):
+							print(range(len(slot)-1))
+							print(k)
+							j = k + 1
+							print(j)
+							# try:
+							# 	if prev == queue.index(queue[-1]) or prev == new_order.index(new_order[-1]):
+							# 		v = 0
+							# 		slot.pop(j)
+							# 		slot.insert(j, v)
+							# 		# if new_order is not None:
+
+							# 		break
+							# except:
+							# 	pass	
+							print(len(slot), slot.index(slot[-2]))
+							if slot.index(slot[-2]) is not 0:
+								print(True)
+								print(slot[j], slot[k])
+								if slot[j] <= slot[k]:
+									print(True, "2")
+									v = slot[k] + 1
+									slot.pop(j)
+									slot.insert(j, v)
+								else:
+									pass
+							elif len(slot) == 2:
+								print(slot[j], slot[k])
+								if slot[j] <= slot[k]:
+									print(True, "2")
+									v = slot[k] + 1
+									slot.pop(j)
+									slot.insert(j, v)
+									break
+								else:
+									pass
+							else:
+								break	
+					else:
+						pass
+				for c in slot:
+					slot2.append(c)
+				slot2.sort()	
+				loop = slot2[-1]//(length-1)
+				print(loop)								
+
+				if toggle == 0:
+					await ctx.invoke(order)	
+				elif toggle == 1:
+					await ctx.invoke(shuffle)		
+				else:
+					pass		
+			else:
+				num+=1
+
+		if num == (len(dup_list)):
+			await ctx.send("Here are a couple of songs that share a similar name. Can you specify which one?")
+			for l in dup_list:
+				await ctx.send(str(l))
+
+	elif len(dup_list) > 75:
+		await ctx.send("Sorry I couldn't find that song")
+
+	elif len(dup_list) == 1:	
+		kur = dup_list[0]+".mp3"
+		if ctx.voice_client.is_playing() is True or ctx.voice_client.is_paused() is True:
+			detect = True
+			queued.append(kur) 
+			slot.append(curr+1)
+			try:
+				if len(slot) == 1 and prev == queue.index(queue[-1]) or prev == new_order.index(new_order[-1]):
+					slot.pop(0)
+					slot.append(0)
+				elif len(slot) == 1 and curr+1 == 0:
+					slot.pop(0)
+					slot.append(1)
+				else:	
+					pass
+			except:
+				pass	
+
+			if len(slot) > 1:		
+				for	k in range(len(slot)-1):
+					print(range(len(slot)-1))
+					print(k)
+					j = k + 1
+					print(j)
+					# try:
+					# 	if prev == queue.index(queue[-1]) or prev == new_order.index(new_order[-1]):
+					# 		v = 0
+					# 		slot.pop(j)
+					# 		slot.insert(j, v)
+					# 		break
+					# except:
+					# 	pass	
+					print(len(slot), slot.index(slot[-2]))
+					if slot.index(slot[-2]) is not 0:
+						print(True)
+						print(slot[j], slot[k])
+						if slot[j] <= slot[k]:
+							print(True, "2")
+							v = slot[k] + 1
+							slot.pop(j)
+							slot.insert(j, v)
+						else:
+							pass
+					elif len(slot) == 2:
+						print(slot[j], slot[k])
+						if slot[j] <= slot[k]:
+							print(True, "2")
+							v = slot[k] + 1
+							slot.pop(j)
+							slot.insert(j, v)
+							break
+						else:
+							pass
+					else:
+						break	
+		else:
+			pass
+		for c in slot:
+			slot2.append(c)
+		slot2.sort()	
+		loop = slot2[-1]//(length-1)
+		print(loop)			
+
+		if toggle == 0:
+			await ctx.invoke(order)	
+		elif toggle == 1:
+			await ctx.invoke(shuffle)	
+		else:
+			pass	
+			
+	else:
+		await ctx.send("Sorry I couldn't find that song")
+
 @client.command()
 async def cmds(ctx):
 	await ctx.send("Here's the list of commands")
@@ -249,7 +477,16 @@ async def order(ctx):
 	global alpha
 	global number
 	global single_play
+	global detect
+	global counter
+	global queued
+	global slot
+	global prev
+	global loop
+	global length
+
 	p2 = 2
+
 	
 	if ctx.message.author.voice != None:
 		if ctx.voice_client is None:
@@ -257,14 +494,32 @@ async def order(ctx):
 	else:
 		await ctx.send("You are not in the channel")
 
-	global detect
-	global counter
+	if len(queued) == 0:
+		for b in hub:
+			if b.endswith(".mp3"):
+				queue.append(b)
+			else:
+				pass			
+	else:
+		for b in hub:
+			if b.endswith(".mp3"):
+				queue.append(b)
+			else:
+				pass
+		for x in queued:
+			queue.remove(x)
 
-	for b in hub:
-		if b.endswith(".mp3"):
-			queue.append(b)
-		else:
-			pass
+		for y in range(len(slot)):
+			if slot[y] == length-2: 
+				queue.insert(slot[y], queued[y])	
+				queue.insert(0, queue.pop())
+			elif slot[y] >= length-1:
+				queue.insert(slot[y] - ((length-1)*loop), queued[y])				
+			else:
+				queue.insert(slot[y], queued[y])
+				
+		print(queue[-3:], queue[0:3])
+											
 
 	alpha = True		
 
@@ -274,12 +529,14 @@ async def order(ctx):
 			if single_play is True:
 				detect = True
 				curr = queue.index(music)
-				counter = 0
+				counter = 1
+				prev = queue.index(music)
 				single_play = False
 			elif number is True:
 				detect = True
 				curr = queue.index(music)
-				number = False
+				prev = queue.index(music)
+				number = False				
 		else:
 			pass		
 	else:
@@ -288,8 +545,11 @@ async def order(ctx):
 	if detect is not True:
 		player = True
 		curr = -1
+		prev = None
 		counter = 0
 		detect = None
+		queued = []
+		slot = []
 		try:
 			value = ctx.voice_client.is_playing()
 			if value == True:
@@ -298,8 +558,9 @@ async def order(ctx):
 			pass
 	else:
 		pass
+		
 
-	player = True
+	player = True				
 
 	if ctx.message.author.voice != None:
 		if ctx.voice_client is None:
@@ -333,8 +594,9 @@ async def order(ctx):
 			if curr == len(queue):
 				curr = 0
 			else:
-				pass
+				pass	
 			music = queue[curr]
+			prev = queue.index(music)
 			try:
 				ctx.voice_client.stop()
 			except:
@@ -351,8 +613,10 @@ async def order(ctx):
 		try:	
 			client.add_command(back)
 			client.add_command(skip)
+			client.add_command(add)
 		except:
-			pass		
+			pass
+
 		if ctx.voice_client.is_playing() is True:
 			await asyncio.sleep(.1)
 		else:
@@ -378,6 +642,12 @@ async def shuffle(ctx):
 	global number
 	global alpha
 	global single_play
+	global queued
+	global slot
+	global prev
+	global loop
+	global length
+
 	p3 = 3
 
 	if ctx.message.author.voice != None:
@@ -388,12 +658,12 @@ async def shuffle(ctx):
 
 	for b in hub:
 		if b.endswith(".mp3"):
-			queue.append(b)
+			queue.append(b)			
 		else:
-			pass
+			pass	
 
 	for x in range(len(queue)):
-		order.append(x)
+		order.append(x)	
 
 	number = True
 
@@ -408,6 +678,7 @@ async def shuffle(ctx):
 					new_order.append(y)
 				new_order.insert(0, queue.index(music))	
 				curr = 0
+				prev = curr
 				counter = 1
 				single_play = False
 			elif alpha is True:
@@ -418,25 +689,50 @@ async def shuffle(ctx):
 					new_order.append(y)
 				new_order.insert(0, queue.index(music))	
 				curr = 0
-				alpha = False	
+				prev = curr
+				alpha = False		
 		else:
 			pass
 	else:
-		pass				
+		pass
 
 	if detect is not True:
+		try:
+			ctx.voice_client.stop()
+		except:
+			pass
 		player = True
 		new_order = []
 		curr = -1
+		prev = None
 		counter = 0
 		detect = None
+		queued = []
+		slot = []
 		random.shuffle(order)
 		for y in order:
 			new_order.append(y)
 	else:
 		pass
 
-	player = True	
+	if len(queued) > 0: 
+		for x in queued:
+			new_order.remove(queue.index(x))
+		for z in range(len(slot)):
+			if slot[z] == length-1:
+				new_order.insert(slot[z], queue.index(queued[z]))	
+				new_order.insert(0, queue.pop())
+			elif slot[z] >= length:
+				new_order.insert(slot[z]-(length*loop), queue.index(queued[z]))
+			else:
+				new_order.insert(slot[z], queue.index(queued[z]))
+			print(len(queue), slot[z])	
+			print(queue.index(queued[z]))	
+			print(new_order[-3:],new_order[0:3])
+	else:
+		pass								
+
+	player = True
 
 	if ctx.message.author.voice != None:
 		if ctx.voice_client is None:
@@ -465,7 +761,7 @@ async def shuffle(ctx):
 					pass
 				check = False
 				detect = False		
-			else:
+			else:	
 				curr += 1
 				detect = False
 			if curr == len(queue):
@@ -473,6 +769,7 @@ async def shuffle(ctx):
 			else:
 				pass
 			music = queue[new_order[curr]]
+			prev = curr
 			try:
 				ctx.voice_client.stop()
 			except:
@@ -489,6 +786,7 @@ async def shuffle(ctx):
 		try:	
 			client.add_command(back)
 			client.add_command(skip)
+			client.add_command(add)
 		except:
 			pass		
 		if ctx.voice_client.is_playing() is True:
@@ -531,6 +829,7 @@ async def play(ctx, song_name):
 
 	client.remove_command(skip)
 	client.remove_command(back)
+	client.remove_command(add)
 	global toggle
 	toggle = -2
 	global curr
@@ -646,6 +945,8 @@ async def pause(ctx):
 		try:
 			if ctx.voice_client.is_paused() == False:
 				ctx.voice_client.pause()
+				while ctx.voice_client.is_paused() == True:
+					await asyncio.sleep(.1)
 			else:
 				await ctx.send("The song is already paused")	
 		except:
@@ -669,10 +970,44 @@ async def resume(ctx):
 
 @client.command()
 async def test(ctx):
-	if ctx.message.author.id == "592605224410152970":
-		print(True)
-	else:
-		print(False)				
+	global prev
+	print(prev)
+	# print(queued)
+	# print(slot)
+	# for x in queue:
+	# 	if x in queued:
+	# 		print(new_order.index(queue.index(x)))
+	# 	else:
+	# 		pass	
+
+# testlist = []
+# super_counter = 0
+
+# for testi in range(5):
+# 	testlist.append(0)
+
+# for zeb in range(100):
+# 	testlist.append(zeb)
+
+# print(testlist)
+# # leb = 45
+# # print(testlist[testlist.index(leb)+1])	
+
+# for	yeb in testlist:
+# 	beb	= testlist.index(yeb)+1
+# 	if beb <= testlist.index(testlist[-1]):
+# 		if testlist[testlist.index(yeb)+1] <= yeb:
+# 			keb = yeb + 1
+# 			neb = testlist.index(yeb)+1
+# 			testlist.remove(testlist[testlist.index(yeb)+1])
+# 			testlist.insert(neb, keb)
+# 		else:
+# 			pass
+# 	else:
+# 		break
+
+						
+# print(testlist)
 
 client.run(numbers())
 keep_alive()
