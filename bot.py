@@ -47,7 +47,9 @@ queued = []
 slot = []
 prev = None
 loop = None
-length = None	
+length = None
+slot2 = {}
+order_backup = None
 
 def numbers():
 	f = open("C:/Users/LucaN/OneDrive/Desktop/Discord Music Bot/config.json", "r")
@@ -252,13 +254,193 @@ async def add(ctx, song_name):
 	# music = song_name
 	song_list = []
 	dup_list = []
-	slot2 = []
-
 	length = 0
 
 	for d in hub:
 		if d.endswith(".mp3"):
 			length+=1			
+		else:
+			pass	
+				
+	word2 = [char for char in song_name]
+	try:
+		if len(word2) <= 0 or str(word2[0]) == " ":
+			await ctx.send("Sorry I couldn't find that song")
+		else:
+			pass
+	except IndexError:
+		pass				
+
+	if song_name.endswith(".mp3"):
+		song_name = song_name.replace(".mp3", "")	
+	song = song_name.lower().split()
+	for b in hub:
+		if b.endswith(".mp3"):
+			b = b.replace(".mp3","")
+			song_list.append(b)			
+
+	count = 0
+	for x in song_list:
+		z = x
+		x = x.lower()
+		for y in song:
+			if y in x:
+				count+=1
+				x = x.replace(y, "", 1)
+				continue	
+			else:
+				count+=0
+
+		if count == len(song):
+			dup_list.append(z)
+			count = 0
+		else:
+			count = 0
+
+	if len(dup_list) > 1 and len(dup_list) < 76:
+		num = 0
+		while num < (len(dup_list)):
+			if len(dup_list[num]) == len(song_name):		
+				kur = dup_list[num]+".mp3"
+				if ctx.voice_client.is_playing() is True or ctx.voice_client.is_paused() is True:
+					detect = True
+					queued.append(kur) 
+					slot.append(curr+1)
+					if len(slot) == 1 and slot[0] >= length:
+						slot.pop(0)
+						slot.append(0)
+						print(True)
+					elif len(slot) == 1 and curr+1 == 0:
+						slot.pop(0)
+						slot.append(1)
+					else:	
+						pass
+					if len(slot) > 1:		
+						for	k in range(len(slot)-1):
+							# print(range(len(slot)-1))
+							# print(k)
+							j = k + 1
+							og = queue.index(queued[j])
+							# print(j)
+							print(slot[k], slot[j], length)
+							if slot[j] >= length:
+								v = slot[j] - length
+								slot.pop(j)
+								slot.insert(j, v)				
+							else:
+								pass
+							print(slot)
+							# slot.sort()
+
+							if slot[j] <= slot[k]:
+								# print(True, "2")
+								v = slot[k] + 1
+								slot.pop(j)
+								slot.insert(j, v)
+							else:
+								pass
+							print(slot)		
+					else:
+						pass
+					print(toggle)	
+					if toggle == 0:
+						await ctx.invoke(order)
+					elif toggle == 1:
+						await ctx.invoke(shuffle)	
+					else:
+						pass									
+			else:
+				num+=1
+
+		if num == (len(dup_list)):
+			await ctx.send("Here are a couple of songs that share a similar name. Can you specify which one?")
+			for l in dup_list:
+				await ctx.send(str(l))			
+
+	elif len(dup_list) > 75:
+		await ctx.send("Sorry I couldn't find that song")
+
+	elif len(dup_list) == 1:	
+		kur = dup_list[0]+".mp3"
+		if ctx.voice_client.is_playing() is True or ctx.voice_client.is_paused() is True:
+			detect = True
+			queued.append(kur) 
+			slot.append(curr+1)
+			if len(slot) == 1 and slot[0] >= length:
+				slot.pop(0)
+				slot.append(0)
+				print(True)
+			if len(slot) == 1 and curr+1 == 0:
+				slot.pop(0)
+				slot.append(1)
+			else:	
+				pass
+			if len(slot) > 1:		
+				for	k in range(len(slot)-1):
+					# print(range(len(slot)-1))
+					# print(k)
+					j = k + 1
+					# print(j)
+					print(slot[k], slot[j], length)
+					if slot[j] >= length:
+						v = slot[j] - length
+						slot.pop(j)
+						slot.insert(j, v)				
+					else:
+						pass
+					print(slot)
+					# slot.sort()		
+					if slot[j] <= slot[k]:
+						# print(True, "2")
+						v = slot[k] + 1
+						slot.pop(j)
+						slot.insert(j, v)
+					else:
+						pass
+					print(slot)	
+			else:
+				pass
+			print(toggle)	
+			if toggle == 0:
+				await ctx.invoke(order)	
+			elif toggle == 1:
+				await ctx.invoke(shuffle)
+			else:
+				pass						
+		else:
+			pass		
+			
+	else:
+		await ctx.send("Sorry I couldn't find that song")
+
+@client.command(aliases = ['a2'])
+async def add2(ctx, song_name):
+	voiceChannel = discord.utils.get(ctx.guild.voice_channels, name='General')
+	value = None
+	global music
+	global kur
+	global toggle
+	global counter
+	global curr
+	global new_order
+	global queue
+	global detect
+	global queued
+	global slot2
+	global prev
+	global loop
+	global length
+	# music = song_name
+	song_list = []
+	dup_list = []
+	length = 0
+	testq = []
+	testqb = []
+	for d in hub:
+		if d.endswith(".mp3"):
+			length+=1
+			testq.append(d)
+			testqb.append(d)
 		else:
 			pass	
 
@@ -305,79 +487,143 @@ async def add(ctx, song_name):
 				kur = dup_list[num]+".mp3"
 				if ctx.voice_client.is_playing() is True or ctx.voice_client.is_paused() is True:
 					detect = True
-					queued.append(kur) 
-					slot.append(curr+1)
-					try:
-						if len(slot) == 1 and prev == queue.index(queue[-1]) or prev == new_order.index(new_order[-1]):
-							slot.pop(0)
-							slot.append(0)
-						elif len(slot) == 1 and curr+1 == 0:
-							slot.pop(0)
-							slot.append(1)
-						else:	
-							pass
-					except:
-						pass	
-					if len(slot) > 1:		
-						for	k in range(len(slot)-1):
-							print(range(len(slot)-1))
-							print(k)
-							j = k + 1
-							print(j)
-							# try:
-							# 	if prev == queue.index(queue[-1]) or prev == new_order.index(new_order[-1]):
-							# 		v = 0
-							# 		slot.pop(j)
-							# 		slot.insert(j, v)
-							# 		# if new_order is not None:
-
-							# 		break
-							# except:
-							# 	pass	
-							print(len(slot), slot.index(slot[-2]))
-							if slot.index(slot[-2]) is not 0:
-								print(True)
-								print(slot[j], slot[k])
-								if slot[j] <= slot[k]:
-									print(True, "2")
-									v = slot[k] + 1
-									slot.pop(j)
-									slot.insert(j, v)
-								else:
-									pass
-							elif len(slot) == 2:
-								print(slot[j], slot[k])
-								if slot[j] <= slot[k]:
-									print(True, "2")
-									v = slot[k] + 1
-									slot.pop(j)
-									slot.insert(j, v)
-									break
-								else:
-									pass
-							else:
-								break	
+					queued.append(kur)
+					if toggle == 0:
+						og = queue.index(kur)
+					elif toggle == 1:
+						og = new_order.index(queue.index(kur))
 					else:
-						pass
-				for c in slot:
-					slot2.append(c)
-				slot2.sort()	
-				loop = slot2[-1]//(length-1)
-				print(loop)								
+						pass		 
+					slot2[kur] = curr+1
+					# slot2 = sorted(slot2.items(), key=lambda x:x[1])
+					slot2 = list(slot2.items())
+					for listf in range(len(slot2)):
+						slot2[listf] = list(slot2[listf])
+					print(slot2)
+					if len(slot2) == 1 and slot2[0][1] >= length:
+						slot2[0].pop(1)
+						slot2[0].append(0)
+					elif len(slot2) == 1 and slot2[0][1] > og:
+						slot2[0].pop(1)
+						slot2[0].append(curr)
+					else:
+						pass					
+					if len(slot2) > 1:
+						print(True)
+						slot2 = dict(slot2)
+						for k in range(len(slot2)-1):
+							try:
+								j = k + 1
+								if toggle == 0:
+									og = queue.index(slot2[j][0])
+								elif toggle == 1:
+									og = new_order.index(queue.index(slot2[j][0]))
+								else:
+									pass	 	
+								loop = slot2[j][1] // length
+								if loop == 0:
+									loop = 1
+								else:
+									pass	
+								if slot2[j][1] <= slot2[k][1]:
+									v = slot2[k][1] + 1
+									slot2[j].pop(1)
+									slot2[j].insert(1,v)
+								else:
+									pass	
+								if slot2[j][1] > og:
+									v = slot2[k][1]
+									slot2[j].pop(1)
+									slot2[j].insert(1,v)
+								else:
+									pass
+							except:
+								pass						
+							# if slot2[j][1] > obg:
+							# 	# tug_counter -= 1
+							# 	# print("tug",tug_counter)	
+							# 	v = slot2[k][1] - 1
+							# 	slot2[j].pop(1)
+							# 	slot2[j].insert(1,v)
+							# else:
+							# 	pass	
+							# if slot2[j][1] < og:
+							# 	if tug_counter < 1:
+							# 		tug_counter += 1
+							# 	else:
+							# 		pass
+								# print("tug",tug_counter)		 		
 
-				if toggle == 0:
-					await ctx.invoke(order)	
-				elif toggle == 1:
-					await ctx.invoke(shuffle)		
-				else:
-					pass		
+					# print(slot2, len(slot2))
+					# for i in slot2:
+					# 	print(i, slot2[i])
+					# 	# if slot2[i] >= 1:
+					# 		# slot2[i]+=1
+					# slot2 = list(slot2.items())
+					# if len(slot2) > 1:
+					# 	slot2.sort(key=lambda x:x[1])
+					# else:
+					# 	pass				
+					# slot2 = sorted(slot2.items(), key=lambda x:x[1])		
+					# print(slot2[0][0], slot2[0][1])
+					slot2 = dict(slot2)
+					print(slot2)
+					# testq = testqb
+					for test in slot2:
+						print(slot2[test])
+						testq.remove(test)
+						testq.insert(slot2[test], test)
+					print(testq[-7:-1], testq[0:7])				
+					break
+
+					# slot.append(curr+1)
+				# 	if slot[0] >= length:
+				# 		slot.pop(0)
+				# 		slot.append(0)
+				# 		print(True)
+				# 	elif len(slot) == 1 and curr+1 == 0:
+				# 		slot.pop(0)
+				# 		slot.append(1)
+				# 	else:	
+				# 		pass
+				# 	if len(slot) > 1:		
+				# 		for	k in range(len(slot)-1):
+				# 			# print(range(len(slot)-1))
+				# 			# print(k)
+				# 			j = k + 1
+				# 			# print(j)
+				# 			print(slot[k], slot[j], length)
+				# 			if slot[j] >= length:
+				# 				v = slot[j] - length
+				# 				slot.pop(j)
+				# 				slot.insert(j, v)				
+				# 			else:
+				# 				pass
+				# 			print(slot)
+				# 			slot.sort()	
+				# 			if slot[j] <= slot[k]:
+				# 				# print(True, "2")
+				# 				v = slot[k] + 1
+				# 				slot.pop(j)
+				# 				slot.insert(j, v)
+				# 			else:
+				# 				pass
+				# 			print(slot)		
+				# 	else:
+				# 		pass
+					# if toggle == 0:
+					# 	await ctx.invoke(order)
+					# elif toggle == 1:
+					# 	await ctx.invoke(shuffle)	
+					# else:
+					# 	pass								
 			else:
 				num+=1
 
 		if num == (len(dup_list)):
 			await ctx.send("Here are a couple of songs that share a similar name. Can you specify which one?")
 			for l in dup_list:
-				await ctx.send(str(l))
+				await ctx.send(str(l))			
 
 	elif len(dup_list) > 75:
 		await ctx.send("Sorry I couldn't find that song")
@@ -385,72 +631,122 @@ async def add(ctx, song_name):
 	elif len(dup_list) == 1:	
 		kur = dup_list[0]+".mp3"
 		if ctx.voice_client.is_playing() is True or ctx.voice_client.is_paused() is True:
-			detect = True
-			queued.append(kur) 
-			slot.append(curr+1)
-			try:
-				if len(slot) == 1 and prev == queue.index(queue[-1]) or prev == new_order.index(new_order[-1]):
-					slot.pop(0)
-					slot.append(0)
-				elif len(slot) == 1 and curr+1 == 0:
-					slot.pop(0)
-					slot.append(1)
-				else:	
-					pass
-			except:
-				pass	
-
-			if len(slot) > 1:		
-				for	k in range(len(slot)-1):
-					print(range(len(slot)-1))
-					print(k)
-					j = k + 1
-					print(j)
-					# try:
-					# 	if prev == queue.index(queue[-1]) or prev == new_order.index(new_order[-1]):
-					# 		v = 0
-					# 		slot.pop(j)
-					# 		slot.insert(j, v)
-					# 		break
-					# except:
-					# 	pass	
-					print(len(slot), slot.index(slot[-2]))
-					if slot.index(slot[-2]) is not 0:
-						print(True)
-						print(slot[j], slot[k])
-						if slot[j] <= slot[k]:
-							print(True, "2")
-							v = slot[k] + 1
-							slot.pop(j)
-							slot.insert(j, v)
+			if toggle == 0:
+				og = queue.index(kur)
+			elif toggle == 1:
+				og = new_order.index(queue.index(kur))
+			else:
+				pass		 
+			slot2[kur] = curr+1
+			# slot2 = sorted(slot2.items(), key=lambda x:x[1])
+			slot2 = list(slot2.items())
+			for listf in range(len(slot2)):
+				slot2[listf] = list(slot2[listf])
+			print(slot2)
+			if len(slot2) == 1 and slot2[0][1] >= length:
+				slot2[0].pop(1)
+				slot2[0].append(0)
+			elif len(slot2) == 1 and slot2[0][1] > og:
+				slot2[0].pop(1)
+				slot2[0].append(curr)
+			else:
+				pass			
+			if len(slot2) > 1:
+				for k in range(len(slot2)-1):
+					try:
+						j = k + 1
+						if toggle == 0:
+							og = queue.index(slot2[j][0])
+						elif toggle == 1:
+							og = new_order.index(queue.index(slot2[j][0]))
 						else:
-							pass
-					elif len(slot) == 2:
-						print(slot[j], slot[k])
-						if slot[j] <= slot[k]:
-							print(True, "2")
-							v = slot[k] + 1
-							slot.pop(j)
-							slot.insert(j, v)
-							break
+							pass	
+						loop = slot2[j][1] // length
+						if loop == 0:
+							loop = 1
 						else:
-							pass
-					else:
-						break	
-		else:
-			pass
-		for c in slot:
-			slot2.append(c)
-		slot2.sort()	
-		loop = slot2[-1]//(length-1)
-		print(loop)			
+							pass		
+						if slot2[j][1] >= (length * loop):
+							v = slot2[j][1] - (length * loop)
+							slot2[j].pop(1)
+							slot2[j].insert(1, v)
+						else:
+							pass	
+						if slot2[j][1] <= slot2[k][1]:
+							v = slot2[k][1] + 1
+							slot2[j].pop(1)
+							slot2[j].insert(1,v)
+						else:
+							pass	
+						if slot2[j][1] > og:
+							v = slot2[k][1]
+							slot2[j].pop(1)
+							slot2[j].insert(1,v)
+						else:
+							pass	
+					# if slot2[j][1] > og:
+					# 	# tug_counter -= 1
+					# 	# print("tug",tug_counter)	
+					# 	v = slot2[k][1] - 1
+					# 	slot2[j].pop(1)
+					# 	slot2[j].insert(1,v)
+					# else:
+					# 	pass			
+					# print(slot2[0][0], slot2[0][1])
+					except:
+						pass
+			slot2 = dict(slot2)
+			print(slot2)
+			# testq = testqb
+			for test in slot2:
+				print(slot2[test])
+				testq.remove(test)
+				testq.insert(slot2[test], test)
+			print(testq[-7:-1], testq[0:7])	 
+			# slot.append(curr+1)
+		# 	if slot[0] >= length:
+		# 		slot.pop(0)
+		# 		slot.append(0)
+		# 		print(True)
+		# 	elif len(slot) == 1 and curr+1 == 0:
+		# 		slot.pop(0)
+		# 		slot.append(1)
+		# 	else:	
+		# 		pass
+		# 	if len(slot) > 1:		
+		# 		for	k in range(len(slot)-1):
+		# 			# print(range(len(slot)-1))
+		# 			# print(k)
+		# 			j = k + 1
+		# 			# print(j)
+		# 			print(slot[k], slot[j], length)
+		# 			if slot[j] >= length:
+		# 				v = slot[j] - length
+		# 				slot.pop(j)
+		# 				slot.insert(j, v)				
+		# 			else:
+		# 				pass
+		# 			print(slot)
+		# 			slot.sort()		
+		# 			if slot[j] <= slot[k]:
+		# 				# print(True, "2")
+		# 				v = slot[k] + 1
+		# 				slot.pop(j)
+		# 				slot.insert(j, v)
+		# 			else:
+		# 				pass
+		# 			print(slot)	
+		# 	else:
+		# 		pass				
+		# else:
+		# 	pass		
 
-		if toggle == 0:
-			await ctx.invoke(order)	
-		elif toggle == 1:
-			await ctx.invoke(shuffle)	
-		else:
-			pass	
+		# if toggle == 0:
+		# 	await ctx.invoke(order)	
+		# elif toggle == 1:
+		# 	await ctx.invoke(shuffle)
+		# else:
+		# 	pass	
 			
 	else:
 		await ctx.send("Sorry I couldn't find that song")
@@ -482,11 +778,10 @@ async def order(ctx):
 	global queued
 	global slot
 	global prev
-	global loop
 	global length
 
 	p2 = 2
-
+	print(toggle)
 	
 	if ctx.message.author.voice != None:
 		if ctx.voice_client is None:
@@ -506,19 +801,42 @@ async def order(ctx):
 				queue.append(b)
 			else:
 				pass
-		for x in queued:
-			queue.remove(x)
-
+		# for x in queued:
+		# 	queue.remove(x)
+		x = 0
 		for y in range(len(slot)):
-			if slot[y] == length-2: 
-				queue.insert(slot[y], queued[y])	
-				queue.insert(0, queue.pop())
-			elif slot[y] >= length-1:
-				queue.insert(slot[y] - ((length-1)*loop), queued[y])				
-			else:
-				queue.insert(slot[y], queued[y])
+			print(slot[y])
+			og = queue.index(queued[y])
+			queue.remove(queued[y])
+			# if slot[y] >= og:
+			# 	if len(slot) > 1 and slot[y] != slot[-1]:
+			# 		if slot[y+1] - slot[y] == 1: 
+			# 			x+=1
+			# 			print(x)
+			# 			print(slot[y]-x)
+			# 			queue.insert(slot[y]-x, queued[y])
+			# 		else:
+			# 			x = 0
+			# 			queue.insert(slot[y]+1, queued[y])	
+			# 	elif len(slot) > 1 and slot[y] == slot[-1]:
+			# 		if slot[y] - slot[y-1] == 1:
+			# 			x+=1
+			# 			queue.insert(slot[y]-x, queued[y])
+			# 		else:
+			# 			x = 0
+			# 			queue.insert(slot[y]+1, queued[y])
+			# 	else:
+			# 		x = 0
+			# 		queue.insert((slot[y]-1)+x, queued[y])			
+			# else:
+				# queue.insert(0, queue.pop()) 
+			queue.insert(slot[y], queued[y])
+			curr = queue.index(music)
 				
-		print(queue[-3:], queue[0:3])
+		# print(len(queue), slot[y])	
+		# print(queued[y])	
+		print(queue[-7:],queue[0:3])
+	print(curr)
 											
 
 	alpha = True		
@@ -647,8 +965,10 @@ async def shuffle(ctx):
 	global prev
 	global loop
 	global length
+	global order_backup
 
 	p3 = 3
+	print(toggle)
 
 	if ctx.message.author.voice != None:
 		if ctx.voice_client is None:
@@ -709,26 +1029,31 @@ async def shuffle(ctx):
 		detect = None
 		queued = []
 		slot = []
+		loop = 1
 		random.shuffle(order)
+		order_backup = order
 		for y in order:
 			new_order.append(y)
 	else:
 		pass
 
-	if len(queued) > 0: 
+	print(new_order[-3:],new_order[0:3])
+	print(order[-3:],order[0:3])
+	if len(queued) > 0:
+		new_order = order_backup 
 		for x in queued:
 			new_order.remove(queue.index(x))
 		for z in range(len(slot)):
+			print(slot[z], curr, length-2)
 			if slot[z] == length-1:
-				new_order.insert(slot[z], queue.index(queued[z]))	
-				new_order.insert(0, queue.pop())
-			elif slot[z] >= length:
-				new_order.insert(slot[z]-(length*loop), queue.index(queued[z]))
+				new_order.insert(0, new_order.pop())
+				new_order.insert(slot[z], queue.index(queued[z]))
+				curr = new_order.index(queue[new_order[curr]])
 			else:
 				new_order.insert(slot[z], queue.index(queued[z]))
-			print(len(queue), slot[z])	
-			print(queue.index(queued[z]))	
-			print(new_order[-3:],new_order[0:3])
+			# print(len(queue), slot[z])	
+			# print(queue.index(queued[z]))	
+			# print(new_order[-3:],new_order[0:3])
 	else:
 		pass								
 
@@ -769,7 +1094,7 @@ async def shuffle(ctx):
 			else:
 				pass
 			music = queue[new_order[curr]]
-			prev = curr
+			prev = queue[new_order[curr]]
 			try:
 				ctx.voice_client.stop()
 			except:
@@ -966,48 +1291,6 @@ async def resume(ctx):
 			await ctx.send("There is nothing playing")
 	else:
 		await ctx.send("You are not in the channel")
-
-
-@client.command()
-async def test(ctx):
-	global prev
-	print(prev)
-	# print(queued)
-	# print(slot)
-	# for x in queue:
-	# 	if x in queued:
-	# 		print(new_order.index(queue.index(x)))
-	# 	else:
-	# 		pass	
-
-# testlist = []
-# super_counter = 0
-
-# for testi in range(5):
-# 	testlist.append(0)
-
-# for zeb in range(100):
-# 	testlist.append(zeb)
-
-# print(testlist)
-# # leb = 45
-# # print(testlist[testlist.index(leb)+1])	
-
-# for	yeb in testlist:
-# 	beb	= testlist.index(yeb)+1
-# 	if beb <= testlist.index(testlist[-1]):
-# 		if testlist[testlist.index(yeb)+1] <= yeb:
-# 			keb = yeb + 1
-# 			neb = testlist.index(yeb)+1
-# 			testlist.remove(testlist[testlist.index(yeb)+1])
-# 			testlist.insert(neb, keb)
-# 		else:
-# 			pass
-# 	else:
-# 		break
-
-						
-# print(testlist)
 
 client.run(numbers())
 keep_alive()
