@@ -67,7 +67,7 @@ for test2 in dummy:
 	update[test2] = dummy.index(test2)
 	
 def numbers():
-	f = open("C:/Users/LucaN/OneDrive/Desktop/Discord Music Bot/config.json", "r")
+	f = open("C:/Users/LucaN\Discord-Music-Bot/config.json", "r")
 	data = json.load(f)
 	mason = data["token"]
 	f.close()
