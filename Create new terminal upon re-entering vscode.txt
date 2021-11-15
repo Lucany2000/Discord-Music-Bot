@@ -1,0 +1,2 @@
+Create new terminal upon re-entering vscode
+or by activating activate.bat
