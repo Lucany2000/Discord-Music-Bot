@@ -1,7 +1,6 @@
 Viron
-keep_alive.py
+config.json
 songs.txt
-pm2.txt
 Reminder.txt
-Viron
+keep_alive.py
 .vscode
