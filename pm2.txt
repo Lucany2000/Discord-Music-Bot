@@ -1,0 +1,3 @@
+in cmd:
+pm2 start bot.py
+pm2 stop bot.py
