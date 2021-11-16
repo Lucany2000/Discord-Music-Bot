@@ -33,39 +33,14 @@ dirlen = len(hub)
 msg = None
 music = None
 curr = None
-detect = None
-queue = None
-check = False
 toggle = None
+n_toggle = 0
 counter = None
-new_order = None
-player = None
-p2 = None
-p3 = None
-alpha = None
-number = None
-single_play = None
-kur = None
-queued = []
-slot = {}
-prev = None
-loop = None
-length = None
-slot2 = {}
 order_backup = None
-queued2 = {}
+queued = {}
 update = {}
-dummy = []
+q_counter = 0
 
-for test in hub:
-	if test.endswith(".mp3"):
-		dummy.append(test)
-	else:
-		pass
-
-for test2 in dummy:
-	update[test2] = dummy.index(test2)
-	
 def numbers():
 	f = open("C:/Users/LucaN\Discord-Music-Bot/config.json", "r")
 	data = json.load(f)
@@ -73,7 +48,6 @@ def numbers():
 	f.close()
 	return mason
 	
-
 @client.event
 async def on_ready():
 	print("bot is ready")
@@ -84,6 +58,13 @@ async def shutdown(ctx):
 		try:
 			await ctx.voice_client.disconnect()	
 			client.remove_command(repeat)
+			client.remove_command(back)
+			client.remove_command(skip)
+			client.remove_command(add)
+			client.remove_command(nxt)
+		except:
+			pass
+		try:
 			repeater.cancel()
 			shuffling.cancel()
 			ordering.cancel()
@@ -153,7 +134,7 @@ async def on_voice_state_update(member, before, after):
 	else:
 		pass			
 
-@client.command()
+@client.command(aliases = ['st'])
 async def stop(ctx):
 	if ctx.message.author.voice != None:
 		try:
@@ -161,6 +142,8 @@ async def stop(ctx):
 			repeater.cancel()
 			client.remove_command(back)
 			client.remove_command(skip)
+			client.remove_command(add)
+			client.remove_command(nxt)
 			ordering.cancel()
 			shuffling.cancel()
 		except:
@@ -197,18 +180,18 @@ async def cmds(ctx):
 
 @client.command(aliases = ['o'])
 async def order(ctx):
-	global queued2
+	global queued
 	global music
 	global curr
 	global counter
 
 	counter = 0
-	queue2 = []
+	queue = []
 	voiceChannel = discord.utils.get(ctx.guild.voice_channels, name='General')
 	curr = 0
 
 	try:
-		queued2.clear()
+		queued.clear()
 	except:
 		pass	
 	
@@ -231,16 +214,17 @@ async def order(ctx):
 
 	for b in hub:
 		if b.endswith(".mp3"):
-				queue2.append(b)
+				queue.append(b)
 		else:
 			pass
-	for x in queue2:
-		queued2[x] = queue2.index(x)
+	for x in queue:
+		queued[x] = queue.index(x)
 
 	try:	
 		client.add_command(back)
 		client.add_command(skip)
 		client.add_command(add)
+		client.add_command(nxt)
 	except:
 		pass	
 
@@ -252,10 +236,16 @@ async def ordering(ctx):
 	global curr
 	global counter
 	global music
+	global q_counter
+	global n_toggle
 
 	if ctx.voice_client.is_playing() is False and ctx.voice_client.is_paused() is False:
-		queue2 = list(queued2)
-		music = queue2[curr]
+		queue = list(queued)
+		if curr < 0:
+			curr = (len(queue)-abs(curr))
+		else:
+			pass
+		music = queue[curr]
 		ctx.voice_client.play(discord.FFmpegPCMAudio(executable="C:/Users/LucaN/FFmpeg/ffmpeg/bin/ffmpeg.exe", source=f"C:/Users/LucaN/Downloads/music/{music}"))
 		music2 = music.replace(".mp3", "")
 		if counter == 0:
@@ -264,7 +254,15 @@ async def ordering(ctx):
 			await ctx.send(str(music2))
 		curr += 1	
 		counter += 1
-		if curr > (len(queued2)-1):	
+		if q_counter > 0:
+			q_counter -= 1
+			if q_counter == 0:
+				n_toggle = 0
+			else:
+				pass
+		else:	
+			pass
+		if curr > (len(queued)-1):	
 			curr = 0
 		else:
 			pass	
@@ -273,18 +271,18 @@ async def ordering(ctx):
 
 @client.command(aliases = ['s'])
 async def shuffle(ctx):
-	global queued2
+	global queued
 	global music
 	global curr
 	global counter
 
 	counter = 0
-	queue2 = []
+	queue = []
 	voiceChannel = discord.utils.get(ctx.guild.voice_channels, name='General')
 	curr = 0
 
 	try:
-		queued2.clear()
+		queued.clear()
 	except:
 		pass	
 	
@@ -307,20 +305,21 @@ async def shuffle(ctx):
 
 	for b in hub:
 		if b.endswith(".mp3"):
-				queue2.append(b)
+				queue.append(b)
 		else:
 			pass
 
-	random.shuffle(queue2)
+	random.shuffle(queue)
 
-	for x in queue2:
-		queued2[x] = queue2.index(x)
+	for x in queue:
+		queued[x] = queue.index(x)
 
 
 	try:	
 		client.add_command(back)
 		client.add_command(skip)
 		client.add_command(add)
+		client.add_command(nxt)
 	except:
 		pass	
 
@@ -331,10 +330,16 @@ async def shuffling(ctx):
 	global curr
 	global counter
 	global music
+	global q_counter
+	global n_toggle
 
 	if ctx.voice_client.is_playing() is False and ctx.voice_client.is_paused() is False:
-		queue2 = list(queued2)
-		music = queue2[curr]
+		queue = list(queued)
+		if curr < 0:
+			curr = (len(queue)-abs(curr))
+		else:
+			pass
+		music = queue[curr]
 		ctx.voice_client.play(discord.FFmpegPCMAudio(executable="C:/Users/LucaN/FFmpeg/ffmpeg/bin/ffmpeg.exe", source=f"C:/Users/LucaN/Downloads/music/{music}"))
 		music2 = music.replace(".mp3", "")
 		if counter == 0:
@@ -343,7 +348,15 @@ async def shuffling(ctx):
 			await ctx.send(str(music2))
 		curr += 1	
 		counter += 1
-		if curr > (len(queued2)-1):	
+		if q_counter > 0:
+			q_counter -= 1
+			if q_counter == 0:
+				n_toggle = 0
+			else:
+				pass
+		else:	
+			pass	
+		if curr > (len(queued)-1):	
 			curr = 0
 		else:
 			pass		
@@ -371,9 +384,130 @@ async def back(ctx):
 async def add(ctx, song_name):
 	global music
 	global curr
-	global queued2
+	global queued
 	global update
-	# music = song_name
+	global q_counter
+	global n_toggle
+	song_list = []
+	dup_list = []
+
+	if q_counter == 0:
+		q_counter = 1
+		n_toggle = 1
+		await ctx.invoke(nxt, song_name)
+	else:				
+		word2 = [char for char in song_name]
+		try:
+			if len(word2) <= 0 or str(word2[0]) == " ":
+				await ctx.send("Sorry I couldn't find that song")
+			else:
+				pass
+		except IndexError:
+			pass				
+
+		if song_name.endswith(".mp3"):
+			song_name = song_name.replace(".mp3", "")	
+		song = song_name.lower().split()
+		for b in hub:
+			if b.endswith(".mp3"):
+				b = b.replace(".mp3","")
+				song_list.append(b)			
+
+		count = 0
+		for x in song_list:
+			z = x
+			x = x.lower()
+			for y in song:
+				if y in x:
+					count+=1
+					x = x.replace(y, "", 1)
+					continue	
+				else:
+					count+=0
+
+			if count == len(song):
+				dup_list.append(z)
+				count = 0
+			else:
+				count = 0
+
+		if len(dup_list) > 1 and len(dup_list) < 76:
+			num = 0
+			while num < (len(dup_list)):
+				if len(dup_list[num]) == len(song_name):			
+					nxt_s = dup_list[num]+".mp3"
+					update = queued
+					og = update[nxt_s]
+					if curr != og:
+						if curr < og:
+							update[nxt_s] = curr + q_counter	
+							for kur in update:
+								if (curr+q_counter) <= update[kur] < og and kur != nxt_s:
+									update[kur] = update[kur]+1
+								else:
+									pass
+						elif curr > og: 
+							update[nxt_s] = (curr-1) + q_counter
+							for kur in update:
+								if og < update[kur] < (curr+q_counter) and kur != nxt_s:
+									update[kur] = update[kur]-1
+								else:
+									pass
+							curr -= 1
+						q_counter += 1									
+						await asyncio.sleep(.1)	
+						queue = sorted(update.items(), key=lambda x:x[1])
+						queued = dict(queue)
+					else:
+						q_counter += 1	
+					break
+				else:
+					num+=1
+
+			if num == (len(dup_list)):
+				await ctx.send("Here are a couple of songs that share a similar name. Can you specify which one?")
+				for l in dup_list:
+					await ctx.send(str(l))			
+
+		elif len(dup_list) > 75:
+			await ctx.send("Sorry I couldn't find that song")
+
+		elif len(dup_list) == 1:		
+			nxt_s = dup_list[0]+".mp3"
+			update = queued
+			og = update[nxt_s]
+			if curr != og:
+				if curr < og:
+					update[nxt_s] = curr + q_counter
+					for kur in update:
+						if (curr+q_counter) <= update[kur] < og and kur != nxt_s:
+							update[kur] = update[kur]+1
+						else:
+							pass
+				elif curr > og:
+					update[nxt_s] = (curr-1) + q_counter
+					for kur in update:
+						if og < update[kur] < (curr+q_counter) and kur != nxt_s:
+							update[kur] = update[kur]-1
+						else:
+							pass
+					curr -= 1
+				q_counter += 1									
+				await asyncio.sleep(.1)	
+				queue = sorted(update.items(), key=lambda x:x[1])
+				queued = dict(queue)		
+			else:
+				q_counter += 1					
+		else:
+			await ctx.send("Sorry I couldn't find that song")
+
+@client.command(aliases = ['n'])
+async def nxt(ctx, song_name):
+	global music
+	global curr
+	global queued
+	global update
+	global q_counter
 	song_list = []
 	dup_list = []
 				
@@ -416,39 +550,33 @@ async def add(ctx, song_name):
 		num = 0
 		while num < (len(dup_list)):
 			if len(dup_list[num]) == len(song_name):			
-				nxt = dup_list[num]+".mp3"
-				update = queued2
-				og = update[nxt]
+				nxt_s = dup_list[num]+".mp3"
+				update = queued
+				og = update[nxt_s]
+				queue2 = sorted(update.items(), key=lambda x:x[1])
 				if curr != og:
-					if curr == len(update):
-						update[nxt] = 0
-					elif curr > -1 and curr < og:
-						update[nxt] = curr	
+					if curr < og:
+						update[nxt_s] = curr	
 						for kur in update:
-							if curr <= update[kur] < og and kur != nxt:
+							if curr <= update[kur] < og and kur != nxt_s:
 								update[kur] = update[kur]+1
 							else:
 								pass
-					else: 
-						if curr > og:
-							update[nxt] = curr -1
-							for kur in update:
-								if og < update[kur] < curr and kur != nxt:
-									update[kur] = update[kur]-1
-								else:
-									pass
-							curr -= 1
-						elif (len(update)-abs(curr)) > og:
-							update[nxt] = (len(update)-abs(curr)) -1 
-							for kur in update:
-								if og < update[kur] < (len(update)-abs(curr)) and kur != nxt:
-									update[kur] = update[kur]-1
-								else:
-									pass
-							curr = (len(update)-abs(curr)) - 1							
+					elif curr > og: 
+						update[nxt_s] = curr -1
+						for kur in update:
+							if og < update[kur] < curr and kur != nxt_s:
+								update[kur] = update[kur]-1
+							else:
+								pass
+						curr -= 1
+					if q_counter != 1:
+						q_counter += 1
+					else:
+						pass										
 					await asyncio.sleep(.1)	
-					queue2 = sorted(update.items(), key=lambda x:x[1])
-					queued2 = dict(queue2)
+					queue = sorted(update.items(), key=lambda x:x[1])
+					queued = dict(queue)
 				else:
 					pass	
 				break
@@ -464,45 +592,38 @@ async def add(ctx, song_name):
 		await ctx.send("Sorry I couldn't find that song")
 
 	elif len(dup_list) == 1:		
-		nxt = dup_list[0]+".mp3"
-		update = queued2
-		og = update[nxt]
-		if curr != og:
-			if curr == len(update):
-				update[nxt] = 0
-			elif curr > -1 and curr < og:
-				update[nxt] = curr	
+		nxt_s = dup_list[0]+".mp3"
+		update = queued
+		og = update[nxt_s]
+		if curr != og:	
+			if curr < og:
+				update[nxt_s] = curr	
 				for kur in update:
-					if curr <= update[kur] < og and kur != nxt:
+					if curr <= update[kur] < og and kur != nxt_s:
 						update[kur] = update[kur]+1
 					else:
 						pass
-			else: 
-				if curr > og:
-					update[nxt] = curr - 1
-					for kur in update:
-						if og < update[kur] < curr and kur != nxt:
-							update[kur] = update[kur]-1
-						else:
-							pass
-					curr -= 1
-				elif (len(update)-abs(curr)) > og:
-					update[nxt] = (len(update)-abs(curr)) -1
-					for kur in update:
-						if og < update[kur] < (len(update)-abs(curr)) and kur != nxt:
-							update[kur] = update[kur]-1
-						else:
-							pass
-					curr = (len(update)-abs(curr)) - 1									
+			elif curr > og:
+				update[nxt_s] = curr - 1
+				for kur in update:
+					if og < update[kur] < curr and kur != nxt_s:
+						update[kur] = update[kur]-1
+					else:
+						pass
+				curr -= 1
+			if n_toggle == 1:
+				q_counter += 1
+			else:
+				pass											
 			await asyncio.sleep(.1)	
-			queue2 = sorted(update.items(), key=lambda x:x[1])
-			queued2 = dict(queue2)		
+			queue = sorted(update.items(), key=lambda x:x[1])
+			queued = dict(queue)		
 		else:
 			pass					
 	else:
 		await ctx.send("Sorry I couldn't find that song")
 
-@client.command()
+@client.command(aliases = ['so'])
 async def songs(ctx):
 	try:
 		os.remove("songs.txt")
@@ -545,6 +666,7 @@ async def play(ctx, song_name):
 	client.remove_command(skip)
 	client.remove_command(back)
 	client.remove_command(add)
+	client.remove_command(nxt)
 
 	if ctx.message.author.voice != None:
 		if ctx.voice_client is None:
@@ -677,6 +799,12 @@ async def resume(ctx):
 			await ctx.send("There is nothing playing")
 	else:
 		await ctx.send("You are not in the channel")
+
+@client.command()
+async def test(ctx, song_name):
+	await ctx.invoke(play, song_name)
+
+
 
 client.run(numbers())
 
