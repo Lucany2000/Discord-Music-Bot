@@ -392,7 +392,6 @@ async def add(ctx, song_name):
 	dup_list = []
 
 	if q_counter == 0:
-		q_counter = 1
 		n_toggle = 1
 		await ctx.invoke(nxt, song_name)
 	else:				
