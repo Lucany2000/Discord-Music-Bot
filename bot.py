@@ -33,7 +33,7 @@ dirlen = len(hub)
 msg = None
 music = None
 curr = None
-toggle = None
+tog = None
 n_toggle = 0
 counter = None
 order_backup = None
@@ -552,7 +552,6 @@ async def nxt(ctx, song_name):
 				nxt_s = dup_list[num]+".mp3"
 				update = queued
 				og = update[nxt_s]
-				queue2 = sorted(update.items(), key=lambda x:x[1])
 				if curr != og:
 					if curr < og:
 						update[nxt_s] = curr	
@@ -798,6 +797,73 @@ async def resume(ctx):
 			await ctx.send("There is nothing playing")
 	else:
 		await ctx.send("You are not in the channel")
+
+@client.command(alias = ['t'])
+async def toggle(ctx, mode):
+	global tog
+	global queued
+	global curr
+	global counter
+	queue = []
+
+	if ctx.voice_client.is_playing() is True or ctx.voice_client.is_paused() is True:
+		for b in hub:
+			if b.endswith(".mp3"):
+				queue.append(b)
+			else:
+				pass
+		counter = 1
+		try:	
+			client.add_command(back)
+			client.add_command(skip)
+			client.add_command(add)
+			client.add_command(nxt)
+		except:
+			pass	
+
+		if mode.lower() == "neutral" or mode.lower() == "n":
+			try:
+				shuffling.cancel()
+				ordering.cancel()
+			except:
+				pass
+			try: 	
+				client.remove_command(back)
+				client.remove_command(skip)
+				client.remove_command(add)
+				client.remove_command(nxt)	
+			except:
+				pass
+			try:
+				queued.clear()
+			except:
+				pass	
+		elif mode.lower() == "order" or mode.lower() == "o":
+			shuffling.cancel()
+			try:
+				queued.clear()
+			except:
+				pass
+			for x in queue:
+				queued[x] = queue.index(x)
+			curr = queued[music]+1
+			ordering.start(ctx)
+		elif mode.lower() == "shuffle" or mode.lower() == "s":
+			ordering.cancel()
+			try:
+				queued.clear()
+			except:
+				pass
+			curr = 1
+			random.shuffle(queue)
+			queue.insert(0, queue.pop(queue.index(music)))
+			for x in queue:
+				queued[x] = queue.index(x)
+			shuffling.start(ctx)
+		else:
+			await ctx.send("That is not a correct mode input")
+	else:
+		await ctx.send("There's nothing playing")
 
 @client.command()
 async def test(ctx, song_name):
