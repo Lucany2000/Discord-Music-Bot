@@ -906,6 +906,7 @@ async def test(ctx):
 
 	await ctx.send(embed=embedVar)
 
+#ooga booga
 
 client.run(numbers())
 
