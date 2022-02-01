@@ -1,10 +1,10 @@
+from asyncore import read
+from xml.etree.ElementInclude import include
 import discord
 import os
 import sys
 import io
 from discord.ext import commands, tasks
-# from itertools import cycle 
-# from keep_alive import keep_alive
 from discord.ext.commands import CommandNotFound
 import discord.ext.commands
 import nacl
@@ -13,17 +13,13 @@ import time
 # import tracemalloc
 import json
 import random
-import eyed3
 import itertools
 import more_itertools
+import openpyxl
+from tinytag import TinyTag
 
 # import requests
 # import selenium
-
-# req = requests.get('http://readycloud.netgear.com/client/index.html')
-# print(dir(req))
-# print(help(req))
-# print(req.text)
 
 # tracemalloc.start()
 client = commands.Bot(command_prefix = ".")
@@ -172,11 +168,11 @@ async def repeater(ctx):
 	if ctx.voice_client.is_playing() is False and ctx.voice_client.is_paused() is False:
 		ctx.voice_client.play(discord.FFmpegPCMAudio(executable="C:/Users/LucaN/FFmpeg/ffmpeg/bin/ffmpeg.exe", source=f"C:/Users/LucaN/Downloads/music/{music}"))
 
-@client.command()
-async def cmds(ctx):
-	await ctx.send("Here's the list of commands")
-	for cmd in client.commands:
-		await ctx.send(str(cmd)+"\n")
+# @client.command()
+# async def help(ctx):
+# 	await ctx.send("Here's the list of commands")
+# 	for cmd in client.commands:
+# 		await ctx.send(str(cmd)+"\n")
 
 @client.command(aliases = ['o'])
 async def order(ctx):
@@ -219,6 +215,8 @@ async def order(ctx):
 			pass
 	for x in queue:
 		queued[x] = queue.index(x)
+
+	print(queued)	
 
 	try:	
 		client.add_command(back)
@@ -305,7 +303,7 @@ async def shuffle(ctx):
 
 	for b in hub:
 		if b.endswith(".mp3"):
-				queue.append(b)
+			queue.append(b)
 		else:
 			pass
 
@@ -313,7 +311,6 @@ async def shuffle(ctx):
 
 	for x in queue:
 		queued[x] = queue.index(x)
-
 
 	try:	
 		client.add_command(back)
@@ -621,26 +618,53 @@ async def nxt(ctx, song_name):
 	else:
 		await ctx.send("Sorry I couldn't find that song")
 
-@client.command(aliases = ['so'])
-async def songs(ctx):
-	try:
-		os.remove("songs.txt")
-	except:
-		pass	
-	f = open("songs.txt", "w", encoding='utf8')
-	x = 0
-
-	for x in range(dirlen):
-		song = str(hub[x])
-		if song.endswith(".mp3"):
-			z = ''.join(('"',song,'"'))
-			f.write(z+"\n")
+@client.command(aliases = ['q'])
+async def queue(ctx):
+	if ctx.message.author.voice != None:
+		if ctx.voice_client.is_playing() is True or ctx.voice_client.is_paused() == True:
+			queue = list(queued)
+			await ctx.send("Up Next Are: ")
+			for x in range(8):
+				q = curr + x
+				if q >= len(queue):
+					q -= len(queue)
+				await ctx.send(f"{str(q+1)}. {queue[q].replace('.mp3', '')}")
 		else:
-			continue
-	f.close()		
-	with open("songs.txt", "rb") as file:
-		await ctx.send("Ayo! Here's the list of songs:", file=discord.File(file, "songs.txt"))
-	f.close()
+			await ctx.send("There is nothing playing")		
+	else:
+		await ctx.send("You are not in the channel")	
+
+@client.command(aliases = ['se'])
+async def search(ctx, query):
+	inquiry = query
+	songs = []
+	for y in range(dirlen):
+		song = str(hub[y])
+		if song.endswith(".mp3"):
+			audio = TinyTag.get(f"C:/Users/LucaN/Downloads/music/{song}")
+			z = song.replace("mp3", "")
+			artist = audio.artist if audio.artist is not None else " "
+			album = audio.album if audio.album is not None else " "
+			songs.append([z, artist, album])
+		else:
+			continue	
+	wb = openpyxl.Workbook()
+	ws = wb.active
+	ws.append(["Songs", "Artists", "Albums"])
+	if inquiry.lower() == "songs" or inquiry.lower() == "song":
+		for x in songs:
+			ws.append([x[0], x[1], x[2]])
+	elif inquiry.lower() == "artists" or inquiry.lower() == "artist":
+		songs.sort(key= lambda x: x[1])
+		for x in songs:
+			ws.append([x[0], x[1], x[2]])
+	elif inquiry.lower() == "albums" or inquiry.lower() == "album":
+		songs.sort(key= lambda x: x[2])
+		for x in songs:
+			ws.append([x[0], x[1], x[2]])
+	wb.save(f"{inquiry}.xlsx")
+	await ctx.send("Ayo! Here's the list of songs:\n",file=discord.File(f"{inquiry}.xlsx"))
+	os.remove(f"{inquiry}.xlsx")
 
 @client.command(aliases = ['pl'])
 async def play(ctx, song_name):
@@ -866,9 +890,21 @@ async def toggle(ctx, mode):
 		await ctx.send("There's nothing playing")
 
 @client.command()
-async def test(ctx, song_name):
-	await ctx.invoke(play, song_name)
+async def test(ctx):
+	embedVar = discord.Embed()
+	for x in range(50):
+		song = str(hub[x])
+		if song.endswith(".mp3"):
+			embedVar.add_field(name="Song", value=song, inline=True)
+			embedVar.add_field(name="Artist", value="Test Artist", inline=True)
+			embedVar.add_field(name="Album", value="Test Album", inline=True)
+			# embedVar.add_field(name=".", value=song, inline=True)
+			# embedVar.add_field(name="\u200b", value="Test Artist", inline=True)
+			# embedVar.add_field(name="\u200b", value="Test Album", inline=True)	
+		else:
+			continue
 
+	await ctx.send(embed=embedVar)
 
 
 client.run(numbers())
