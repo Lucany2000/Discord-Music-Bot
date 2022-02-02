@@ -1,4 +1,7 @@
+from ast import alias
 from asyncore import read
+from pydoc import describe
+from turtle import title
 from xml.etree.ElementInclude import include
 import discord
 import os
@@ -22,7 +25,7 @@ from tinytag import TinyTag
 # import selenium
 
 # tracemalloc.start()
-client = commands.Bot(command_prefix = ".")
+client = commands.Bot(command_prefix = ".", help_command=None)
 member = discord.Client()
 hub = os.listdir("C:/Users/LucaN/Downloads/music")
 dirlen = len(hub)
@@ -168,11 +171,31 @@ async def repeater(ctx):
 	if ctx.voice_client.is_playing() is False and ctx.voice_client.is_paused() is False:
 		ctx.voice_client.play(discord.FFmpegPCMAudio(executable="C:/Users/LucaN/FFmpeg/ffmpeg/bin/ffmpeg.exe", source=f"C:/Users/LucaN/Downloads/music/{music}"))
 
-# @client.command()
-# async def help(ctx):
-# 	await ctx.send("Here's the list of commands")
-# 	for cmd in client.commands:
-# 		await ctx.send(str(cmd)+"\n")
+@client.command(aliases = ['h'])
+async def help(ctx):
+	await ctx.send("Here's the list of commands")
+	embed = discord.Embed(title="Manual", description="A list of commands, their aliases, uses, inputs, and conditions")
+	embed.add_field(name="Help", value="Alias = 'h'\nUse: Menu containing descriptions about other Commands")
+	embed.add_field(name="Play", value="Alias = 'p'\nUse: play music given input of song name, cancels audio based commands")
+	embed.add_field(name="Order", value="Alias = 'o'\nUse: plays music in alphabetical order, loops around once it hits the end")
+	embed.add_field(name="Shuffle", value="Alias = 's'\nUse: plays music in shuffled order, loops around once it hits the end")
+	embed.add_field(name="Pause", value="Alias = '||'\nUse: pauses music")
+	embed.add_field(name="Stop", value="Alias = 'st'\nUse: stops music")
+	embed.add_field(name="Resume", value="Alias = 'r'\nUse: resumes music")
+	embed.add_field(name="Leave", value="Alias = 'l'\nUse: forces bot to leave voice chat")
+	embed.add_field(name="Skip", value="Alias = '>'\nUse: skips current song, can only be used while in: playlist, order, shuffle, toggle, will loop back to first if on last song")
+	embed.add_field(name="Back", value="Alias = '<'\nUse: goes back from current song, can only be used while in: playlist, order, shuffle, toggle, will loop back to last if on first song")
+	embed.add_field(name="Add", value="Alias = 'a'\nUse: adds song to a queue, can only be used while in: playlist, order, shuffle, toggle")
+	embed.add_field(name="Nxt", value="Alias = 'n'\nUse: adds song to be played next, can only be used while in: playlist, order, shuffle, toggle")
+	embed.add_field(name="Queue", value="Alias = 'q'\nUse: shows the next 8 songs that will play next, can only be used while in: playlist, order, shuffle, toggle")
+	embed.add_field(name="Search", value="Alias = 'se'\nUse: gives full list of songs with corresponding artists and albums in a table format")
+	embed.add_field(name="Repeat", value="Alias = 're'\nUse: repeats current song, mainly canceled out by the 'forward' command")
+	embed.add_field(name="Forward", value="Alias = 'f'\nUse: cancels out 'repeat' command")
+	embed.add_field(name="Toggle", value="Alias = 't'\nInput = 'neutral'/alias = 'n': nothing changes, cancels out other options\nInput = 'order'/alias = 'o': invokes 'order' command from current song's postion\nInput = 'shuffle'/alias = 's': invokes 'shuffle' using current song as first song")
+	embed.add_field(name="Playlist", value="Alias = 'pl'\nUse: creates a playlist based off artist or album inputted, all audio commands besides 'play' will act as if the songs in the playlist are the only songs available, can be turned off if 'all' is inputed")
+
+
+	await ctx.send(embed=embed)
 
 @client.command(aliases = ['o'])
 async def order(ctx):
@@ -622,13 +645,16 @@ async def nxt(ctx, song_name):
 async def queue(ctx):
 	if ctx.message.author.voice != None:
 		if ctx.voice_client.is_playing() is True or ctx.voice_client.is_paused() == True:
-			queue = list(queued)
-			await ctx.send("Up Next Are: ")
-			for x in range(8):
-				q = curr + x
-				if q >= len(queue):
-					q -= len(queue)
-				await ctx.send(f"{str(q+1)}. {queue[q].replace('.mp3', '')}")
+			if ordering.is_running() is True or shuffling.is_running() is True:
+				queue = list(queued)
+				await ctx.send("Up Next Are: ")
+				for x in range(8):
+					q = curr + x
+					if q >= len(queue):
+						q -= len(queue)
+					await ctx.send(f"{str(q+1)}. {queue[q].replace('.mp3', '')}")
+			else:
+				await ctx.send("No queue list detected")		
 		else:
 			await ctx.send("There is nothing playing")		
 	else:
@@ -666,7 +692,7 @@ async def search(ctx, query):
 	await ctx.send("Ayo! Here's the list of songs:\n",file=discord.File(f"{inquiry}.xlsx"))
 	os.remove(f"{inquiry}.xlsx")
 
-@client.command(aliases = ['pl'])
+@client.command(aliases = ['p'])
 async def play(ctx, song_name):
 	voiceChannel = discord.utils.get(ctx.guild.voice_channels, name='General')
 	value = None
@@ -794,7 +820,7 @@ async def leave(ctx):
 	else:
 		await ctx.send("You are not in the channel")				
 
-@client.command(aliases = ['p'])
+@client.command(aliases = ['||'])
 async def pause(ctx):
 	if ctx.message.author.voice != None:
 		try:
