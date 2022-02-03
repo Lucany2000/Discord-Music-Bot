@@ -26,9 +26,14 @@ from tinytag import TinyTag
 # import selenium
 
 # tracemalloc.start()
+hub = []
 client = commands.Bot(command_prefix = ".", help_command=None)
 member = discord.Client()
-hub = os.listdir("C:/Users/LucaN/Downloads/music")
+base = os.listdir("C:/Users/LucaN/Downloads/music")
+for og in base:
+	if og.endswith(".mp3"):
+		hub.append(og)
+full = hub
 dirlen = len(hub)
 msg = None
 music = None
@@ -388,8 +393,12 @@ async def add(ctx, song_name):
 	global n_toggle
 	song_list = []
 	dup_list = []
+
 	global pos
 	global pos2
+
+	pos = None
+	pos2 = None
 
 	if q_counter == 0:
 		n_toggle = 1
@@ -553,6 +562,9 @@ async def nxt(ctx, song_name):
 	dup_list = []
 	global pos
 	global pos2
+
+	pos = None
+	pos2 = None
 				
 	word2 = [char for char in song_name]
 	try:
@@ -767,6 +779,9 @@ async def play(ctx, song_name):
 	dup_list = []
 	global pos
 	global pos2
+
+	pos = None
+	pos2 = None
 
 	try:
 		shuffling.stop()
