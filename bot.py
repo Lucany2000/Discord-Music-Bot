@@ -28,15 +28,7 @@ from tinytag import TinyTag
 # tracemalloc.start()
 client = commands.Bot(command_prefix = ".", help_command=None)
 member = discord.Client()
-hub = []
-base = os.listdir("C:/Users/LucaN/Downloads/music")
-
-for og in base:
-	if og.endswith(".mp3"):
-		hub.append(og)
-	else:
-		pass
-
+hub = os.listdir("C:/Users/LucaN/Downloads/music")
 dirlen = len(hub)
 msg = None
 music = None
@@ -218,8 +210,10 @@ async def order(ctx):
 		await ctx.send("You are not in the channel")
 
 	for b in hub:
-		queue.append(b)
-
+		if b.endswith(".mp3"):
+				queue.append(b)
+		else:
+			pass
 	for x in queue:
 		queued[x] = queue.index(x)
 
@@ -309,7 +303,10 @@ async def shuffle(ctx):
 		await ctx.send("You are not in the channel")
 
 	for b in hub:
-		queue.append(b)
+		if b.endswith(".mp3"):
+			queue.append(b)
+		else:
+			pass
 
 	random.shuffle(queue)
 
@@ -411,11 +408,13 @@ async def add(ctx, song_name):
 			song_name = song_name.replace(".mp3", "")	
 		song = song_name.lower().split()
 		for b in hub:
-			song_list.append(b)			
+			if b.endswith(".mp3"):
+				b = b.replace(".mp3","")
+				song_list.append(b)			
 
 		count = 0
 		for x in song_list:
-			audio = TinyTag.get(f"C:/Users/LucaN/Downloads/music/{x}")
+			audio = TinyTag.get(f"C:/Users/LucaN/Downloads/music/{x}.mp3")
 			z = x
 			x = x.lower()
 			for y in song:
@@ -568,11 +567,13 @@ async def nxt(ctx, song_name):
 		song_name = song_name.replace(".mp3", "")	
 	song = song_name.lower().split()
 	for b in hub:
-		song_list.append(b)			
+		if b.endswith(".mp3"):
+			b = b.replace(".mp3","")
+			song_list.append(b)			
 
 	count = 0
 	for x in song_list:
-		audio = TinyTag.get(f"C:/Users/LucaN/Downloads/music/{x}")
+		audio = TinyTag.get(f"C:/Users/LucaN/Downloads/music/{x}.mp3")
 		z = x
 		x = x.lower()
 		for y in song:
@@ -731,11 +732,14 @@ async def search(ctx, query):
 	songs = []
 	for y in range(dirlen):
 		song = str(hub[y])
-		audio = TinyTag.get(f"C:/Users/LucaN/Downloads/music/{song}")
-		z = song.replace("mp3", "")
-		artist = audio.artist if audio.artist is not None else " "
-		album = audio.album if audio.album is not None else " "
-		songs.append([z, artist, album])	
+		if song.endswith(".mp3"):
+			audio = TinyTag.get(f"C:/Users/LucaN/Downloads/music/{song}")
+			z = song.replace("mp3", "")
+			artist = audio.artist if audio.artist is not None else " "
+			album = audio.album if audio.album is not None else " "
+			songs.append([z, artist, album])
+		else:
+			continue	
 	wb = openpyxl.Workbook()
 	ws = wb.active
 	ws.append(["Songs", "Artists", "Albums"])
@@ -798,11 +802,13 @@ async def play(ctx, song_name):
 		song_name = song_name.replace(".mp3", "")	
 	song = song_name.lower().split()
 	for b in hub:
-		song_list.append(b)			
+		if b.endswith(".mp3"):
+			b = b.replace(".mp3","")
+			song_list.append(b)			
 
 	count = 0
 	for x in song_list:
-		audio = TinyTag.get(f"C:/Users/LucaN/Downloads/music/{x}")
+		audio = TinyTag.get(f"C:/Users/LucaN/Downloads/music/{x}.mp3")
 		z = x
 		x = x.lower()
 		for y in song:
@@ -961,7 +967,10 @@ async def toggle(ctx, mode):
 
 	if ctx.voice_client.is_playing() is True or ctx.voice_client.is_paused() is True:
 		for b in hub:
-			queue.append(b)
+			if b.endswith(".mp3"):
+				queue.append(b)
+			else:
+				pass
 		counter = 1
 		try:	
 			client.add_command(back)
@@ -1016,143 +1025,149 @@ async def toggle(ctx, mode):
 		await ctx.send("There's nothing playing")
 
 @client.command(alias = ['pl'])
-async def playlist(ctx, metadata):
-	voiceChannel = discord.utils.get(ctx.guild.voice_channels, name='General')
+async def playlist(ctx, tgle, metadata):
 	meta = metadata
+	t = tgle
 	song_list = []
 	dup_list = []
 	global pos
 	global pos2
+	global hub
 
 	pos = None
 	pos2 = None
 
-	try:
-		shuffling.stop()
-	except:
-		pass
-
-	try:
-		ordering.stop()
-	except:
-		pass		
-
-	client.remove_command(skip)
-	client.remove_command(back)
-	client.remove_command(add)
-	client.remove_command(nxt)
-
-	if ctx.message.author.voice != None:
-		if ctx.voice_client is None:
-			await voiceChannel.connect()
-	else:
-		await ctx.send("You are not in the channel")				
-
-	word2 = [char for char in meta]
-	try:
-		if len(word2) <= 0 or str(word2[0]) == " ":
-			await ctx.send("Sorry I couldn't find that Artist/Album")
-		else:
-			pass
-	except IndexError:
-		pass				
-
-	if meta.endswith(".mp3"):
-		await ctx.send("This is not an Artist/Album")	
-	meta = meta.lower().split()
-	for b in hub:
-		song_list.append(b)			
-
-	count = 0
-	for x in song_list:
-		audio = TinyTag.get(f"C:/Users/LucaN/Downloads/music/{x}")
-		z = x
-		x = x.lower()
-		for y in meta:
-			if y in (audio.artist.lower() if audio.artist is not None else " "):
-				pos = x.find(y)
-				if pos2 == None:
-					pos2 = pos
-				else:
-					if pos2 <= pos:
-						pos2 = pos
-						pass
-					else:
-						continue
-				count+=1
-				x = x.replace(y, "", 1)
-				continue	
-			else:
-				count+=0
-			if y in (audio.album.lower() if audio.album is not None else " "):
-				pos = x.find(y)
-				if pos2 == None:
-					pos2 = pos
-				else:
-					if pos2 <= pos:
-						pos2 = pos
-						pass
-					else:
-						continue
-				count+=1
-				x = x.replace(y, "", 1)
-				continue	
-			else:
-				count+=0
-		pos = None
-		pos2 = None			
-
-		if count == len(meta):
-			dup_list.append(z)
-			count = 0
-		else:
-			count = 0
-
-	if len(dup_list) == 1:
+	if t.lower() != "all" or t.lower() != 'a':
 		try:
-			if ctx.voice_client.is_playing() == True:
-				ctx.voice_client.stop()
+			shuffling.stop()
+		except:
+			pass
+
+		try:
+			ordering.stop()
 		except:
 			pass		
-		music = dup_list[0]+".mp3"
-		ctx.voice_client.play(discord.FFmpegPCMAudio(executable="C:/Users/LucaN/FFmpeg/ffmpeg/bin/ffmpeg.exe", source=f"C:/Users/LucaN/Downloads/music/{music}"))
-		await ctx.send("Now playing "+ str((dup_list[0])))
 		try:
-			client.add_command(repeat)
+			client.remove_command(skip)
+			client.remove_command(back)
+			client.remove_command(add)
+			client.remove_command(nxt)
 		except:
 			pass
-
-	elif len(dup_list) > 1:
-		num = 0
-		while num < (len(dup_list)):
-			if len(dup_list[num]) == len(meta):
-				try:
-					if ctx.voice_client.is_playing() == True:
-						ctx.voice_client.stop()
-				except:
-					pass		
-				music = dup_list[num]+".mp3"
-				ctx.voice_client.play(discord.FFmpegPCMAudio(executable="C:/Users/LucaN/FFmpeg/ffmpeg/bin/ffmpeg.exe", source=f"C:/Users/LucaN/Downloads/music/{music}"))
-				await ctx.send("Now playing "+ str((dup_list[num])))
-				try:
-					client.add_command(repeat)
-				except:
-					pass
-				break
+					
+		word2 = [char for char in meta]
+		try:
+			if len(word2) <= 0 or str(word2[0]) == " ":
+				await ctx.send("Sorry I couldn't find that Artist/Album")
 			else:
-				num+=1
+				pass
+		except IndexError:
+			pass				
 
-		if num == (len(dup_list)):
-			await ctx.send("Here are a couple of artists/albums that share a similar name. Can you specify which one?")
-			# await ctx.send(f"**```\n{song_name}\n```**\n{str(list(l for l in dup_list))}\n")
-			# embedVar = discord.Embed()
-			for l in dup_list:
-				await ctx.send(str(l))
-			# embedVar.add_field(name=f"{song_name}", value=list(l for l in dup_list))
-			# await ctx.send("```**")	
+		if meta.endswith(".mp3"):
+			await ctx.send("This is not an Artist/Album")	
+		meta = meta.lower().split()
+		for b in hub:
+			if b.endswith(".mp3"):
+				b = b.replace(".mp3", "")
+				song_list.append(b)			
 
+		count = 0
+		for x in song_list:
+			audio = TinyTag.get(f"C:/Users/LucaN/Downloads/music/{x}.mp3")
+			for y in meta:
+				if y in (audio.artist.lower() if audio.artist is not None else " "):
+					pos = x.find(y)
+					if pos2 == None:
+						pos2 = pos
+					else:
+						if pos2 <= pos:
+							pos2 = pos
+							pass
+						else:
+							continue
+					count+=1
+					x = x.replace(y, "", 1)
+					continue	
+				else:
+					count+=0
+				if y in (audio.album.lower() if audio.album is not None else " "):
+					pos = x.find(y)
+					if pos2 == None:
+						pos2 = pos
+					else:
+						if pos2 <= pos:
+							pos2 = pos
+							pass
+						else:
+							continue
+					count+=1
+					x = x.replace(y, "", 1)
+					continue	
+				else:
+					count+=0
+			pos = None
+			pos2 = None			
+
+			if count == len(meta):
+				if t.lower() == "artist":
+					dup_list.append(audio.artist)
+					count = 0
+				elif t.lower() == "album":
+					dup_list.append(audio.album)
+					count = 0
+			else:
+				count = 0
+
+		if len(dup_list) == 1:
+			if dup_list[0] != " " or dup_list[0] != None:
+				hub.clear()
+				for z in full:
+					audio = TinyTag.get(f"C:/Users/LucaN/Downloads/music/{z}")
+					if t.lower() == "artist":
+						if audio.artist == dup_list[0]:
+							hub.append(z)
+					elif t.lower() == "album":
+						if audio.album == dup_list[0]:
+							hub.append(z)
+					await ctx.send(f"You're now in playlist {dup_list[0]}")		
+			else:
+				await ctx.send("Sorry I couldn't find that Artist/Album")						
+
+		elif len(dup_list) > 1:
+			num = 0
+			while num < (len(dup_list)):
+				if len(dup_list[num]) == len(meta):
+					if dup_list[num] != " " or dup_list[num] != None:
+						hub.clear()
+						for z in full:
+							audio = TinyTag.get(f"C:/Users/LucaN/Downloads/music/{z}")
+							if t.lower() == "artist":
+								if audio.artist == dup_list[num]:
+									hub.append(z)
+							elif t.lower() == "album":
+								if audio.album == dup_list[num]:
+									hub.append(z)
+							await ctx.send(f"You're now in playlist {dup_list[num]}")		
+						else:
+							await ctx.send("Sorry I couldn't find that Artist/Album")				
+				else:
+					num+=1
+
+			if num == (len(dup_list)):
+				await ctx.send("Here are a couple of artists/albums that share a similar name. Can you specify which one?")
+				# await ctx.send(f"**```\n{song_name}\n```**\n{str(list(l for l in dup_list))}\n")
+				# embedVar = discord.Embed()
+				for l in dup_list:
+					await ctx.send(str(l))
+				# embedVar.add_field(name=f"{song_name}", value=list(l for l in dup_list))
+				# await ctx.send("```**")	
+
+		else:
+			await ctx.send("Sorry I couldn't find that Artist/Album")
 	else:
-		await ctx.send("Sorry I couldn't find that song")
+		hub = full
+		await ctx.send("You've exited the playlist")
 
 
 @client.command(aliases=['*'])
@@ -1202,11 +1217,13 @@ async def test(ctx, song_name):
 		song_name = song_name.replace(".mp3", "")	
 	song = song_name.lower().split()
 	for b in hub:
-		song_list.append(b)			
+		if b.endswith(".mp3"):
+			b = b.replace(".mp3","")
+			song_list.append(b)			
 
 	count = 0
 	for x in song_list:
-		audio = TinyTag.get(f"C:/Users/LucaN/Downloads/music/{x}")
+		audio = TinyTag.get(f"C:/Users/LucaN/Downloads/music/{x}.mp3")
 		z = x
 		x = x.lower()
 		for y in song:
