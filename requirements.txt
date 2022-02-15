@@ -12,7 +12,6 @@ ffmpeg-python==0.2.0
 filetype==1.0.8
 future==0.18.2
 idna==3.2
-more-itertools==8.10.0
 multidict==5.2.0
 packaging==21.0
 pycparser==2.20
