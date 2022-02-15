@@ -1370,7 +1370,7 @@ async def tracker(ctx):
 		playback = False
 		tracker.cancel()
 
-	if now >= dur/2:
+	if now >= dur//2:
 		playback = True
 	else:
 		playback = False
