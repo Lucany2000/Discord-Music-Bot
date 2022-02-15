@@ -4,6 +4,8 @@
 # from pydoc import describe
 # from turtle import title
 # from xml.etree.ElementInclude import include
+from glob import glob
+from pydoc import cli
 import discord
 import os
 import sys
@@ -59,14 +61,11 @@ async def shutdown(ctx):
 	if ctx.message.author.id == ctx.guild.owner_id or ctx.message.author.id == 592605224410152970: 
 		try:
 			await ctx.voice_client.disconnect()	
-			client.remove_command(repeat)
-			client.remove_command(back)
-			client.remove_command(skip)
-			client.remove_command(add)
-			client.remove_command(nxt)
 			repeater.cancel()
-			shuffling.cancel()
 			ordering.cancel()
+			shuffling.cancel()
+			tracker.cancel()
+			playing.cancel()
 		except:
 			pass		
 		sys.exit()
@@ -114,14 +113,11 @@ async def on_voice_state_update(member, before, after):
 async def stop(ctx):
 	if ctx.message.author.voice != None:
 		try:
-			client.remove_command(repeat)
 			repeater.cancel()
-			client.remove_command(back)
-			client.remove_command(skip)
-			client.remove_command(add)
-			client.remove_command(nxt)
 			ordering.cancel()
 			shuffling.cancel()
+			tracker.cancel()
+			playing.cancel()
 		except:
 			pass
 		try:	
@@ -134,8 +130,11 @@ async def stop(ctx):
 
 @commands.command(aliases = ['f'])
 async def forward(ctx):
-	repeater.stop()
-	client.remove_command(forward)	
+	if repeater.is_running():
+		repeater.stop()
+		client.remove_command(forward)
+	else:
+		await ctx.send("The repeater is not running")		
 	
 
 @commands.command(aliases = ['re'])
@@ -145,9 +144,15 @@ async def repeat(ctx):
 
 @tasks.loop(count=None)
 async def repeater(ctx):
+	global now
 	if ctx.voice_client.is_playing() is False and ctx.voice_client.is_paused() is False:
+		now = 0
 		ctx.voice_client.play(discord.FFmpegPCMAudio(executable="C:/Users/LucaN/FFmpeg/ffmpeg/bin/ffmpeg.exe", source=f"C:/Users/LucaN/Downloads/music/{music}"))
-		tracker.start(ctx)
+		if not tracker.is_running():
+			tracker.start(ctx)
+		else:
+			pass	
+		
 
 @client.command(aliases = ['h'])
 async def help(ctx):
@@ -172,6 +177,7 @@ async def help(ctx):
 	embed.add_field(name="Toggle", value="Alias = 't'\nInput = 'neutral'/alias = 'n': nothing changes, cancels out other options\nInput = 'order'/alias = 'o': invokes 'order' command from current song's postion\nInput = 'shuffle'/alias = 's': invokes 'shuffle' using current song as first song")
 	embed.add_field(name="Playlist", value="Alias = 'pl'\nUse: creates a playlist based off artist or album inputted, all audio commands besides 'play' will act as if the songs in the playlist are the only songs available, can be turned off if 'all' is inputed")
 	await ctx.send(embed=embed)
+
 
 @client.command(aliases = ['o'])
 async def order(ctx):
@@ -198,6 +204,12 @@ async def order(ctx):
 
 	try:
 		shuffling.cancel()
+		playing.cancel()
+		client.add_command(repeat)
+		client.add_command(back)
+		client.add_command(skip)
+		client.add_command(add)
+		client.add_command(nxt)
 	except:
 		pass	
 
@@ -209,19 +221,12 @@ async def order(ctx):
 
 	for b in hub:
 		if b.endswith(".mp3"):
-				queue.append(b)
+			queue.append(b)
 		else:
 			pass
 	for x in queue:
 		queued[x] = queue.index(x)	
 
-	try:	
-		client.add_command(back)
-		client.add_command(skip)
-		client.add_command(add)
-		client.add_command(nxt)
-	except:
-		pass	
 
 	ordering.start(ctx)
 											
@@ -233,6 +238,7 @@ async def ordering(ctx):
 	global music
 	global q_counter
 	global n_toggle
+	global now
 
 	if ctx.voice_client.is_playing() is False and ctx.voice_client.is_paused() is False:
 		queue = list(queued)
@@ -240,9 +246,13 @@ async def ordering(ctx):
 			curr = (len(queue)-abs(curr))
 		else:
 			pass
+		now = 0	
 		music = queue[curr]
 		ctx.voice_client.play(discord.FFmpegPCMAudio(executable="C:/Users/LucaN/FFmpeg/ffmpeg/bin/ffmpeg.exe", source=f"C:/Users/LucaN/Downloads/music/{music}"))
-		tracker.start(ctx)
+		if not tracker.is_running():
+			tracker.start(ctx)
+		else:
+			pass	
 		music2 = music.replace(".mp3", "")
 		if counter == 0:
 			await ctx.send("Now playing "+ str(music2))
@@ -290,6 +300,12 @@ async def shuffle(ctx):
 
 	try:
 		ordering.cancel()
+		playing.cancel()
+		client.add_command(repeat)
+		client.add_command(back)
+		client.add_command(skip)
+		client.add_command(add)
+		client.add_command(nxt)
 	except:
 		pass	
 
@@ -309,14 +325,7 @@ async def shuffle(ctx):
 
 	for x in queue:
 		queued[x] = queue.index(x)
-
-	try:	
-		client.add_command(back)
-		client.add_command(skip)
-		client.add_command(add)
-		client.add_command(nxt)
-	except:
-		pass	
+	
 
 	shuffling.start(ctx)
 
@@ -327,6 +336,7 @@ async def shuffling(ctx):
 	global music
 	global q_counter
 	global n_toggle
+	global now
 
 	if ctx.voice_client.is_playing() is False and ctx.voice_client.is_paused() is False:
 		queue = list(queued)
@@ -334,9 +344,13 @@ async def shuffling(ctx):
 			curr = (len(queue)-abs(curr))
 		else:
 			pass
+		now = 0
 		music = queue[curr]
-		ctx.voice_client.play(discord.FFmpegPCMAudio(executable="C:/Users/LucaN/FFmpeg/ffmpeg/bin/ffmpeg.exe", source=f"C:/Users/LucaN/Downloads/music/{music}"))
-		tracker.start(ctx)
+		ctx.voice_client.play(discord.FFmpegPCMAudio(executable="C:/Users/LucaN/FFmpeg/ffmpeg/bin/ffmpeg.exe", source=f"C:/Users/LucaN/Downloads/music/{music}"))	
+		if not tracker.is_running():
+			tracker.start(ctx)
+		else:
+			pass
 		music2 = music.replace(".mp3", "")
 		if counter == 0:
 			await ctx.send("Now playing "+ str(music2))
@@ -364,7 +378,6 @@ async def skip(ctx):
 	global curr
 	global now
 	if ctx.voice_client.is_playing() is True or ctx.voice_client.is_paused() is True:
-		tracker.cancel()
 		now = 0
 		ctx.voice_client.stop()
 	else:
@@ -375,14 +388,13 @@ async def back(ctx):
 	global curr
 	global now
 	if ctx.voice_client.is_playing() is True or ctx.voice_client.is_paused() is True:
-		tracker.cancel()
 		ctx.voice_client.stop()
 		if playback is True:	
 			curr -= 1
 			now = 0
 		else:
 			curr -= 2
-			now = 0		
+			now = 0				
 	else:
 		await ctx.send("Nothing is playing right now")
 
@@ -726,16 +738,13 @@ async def nxt(ctx, song_name):
 async def queue(ctx):
 	if ctx.message.author.voice != None:
 		if ctx.voice_client.is_playing() is True or ctx.voice_client.is_paused() == True:
-			if ordering.is_running() is True or shuffling.is_running() is True:
-				queue = list(queued)
-				await ctx.send("Up Next Are: ")
-				for x in range(8):
-					q = curr + x
-					if q >= len(queue):
-						q -= len(queue)
-					await ctx.send(f"{str(q+1)}. {queue[q].replace('.mp3', '')}")
-			else:
-				await ctx.send("No queue list detected")		
+			queue = list(queued)
+			await ctx.send("Up Next Are: ")
+			for x in range(8):
+				q = curr + x
+				if q >= len(queue):
+					q -= len(queue)
+				await ctx.send(f"{str(q+1)}. {queue[q].replace('.mp3', '')}")		
 		else:
 			await ctx.send("There is nothing playing")		
 	else:
@@ -782,20 +791,23 @@ async def play(ctx, song_name):
 	dup_list = []
 	global pos
 	global pos2
-	global hub
+	global queued
+	# global hub
+
 
 	pos = None
 	pos2 = None
 
-	hub = full
+	# hub = full
 
 	try:
-		shuffling.cancel()
 		ordering.cancel()
-		client.remove_command(skip)
-		client.remove_command(back)
-		client.remove_command(add)
-		client.remove_command(nxt)
+		shuffling.cancel()
+		client.add_command(repeat)
+		client.add_command(back)
+		client.add_command(skip)
+		client.add_command(add)
+		client.add_command(nxt)
 	except:
 		pass		
 
@@ -892,10 +904,6 @@ async def play(ctx, song_name):
 		ctx.voice_client.play(discord.FFmpegPCMAudio(executable="C:/Users/LucaN/FFmpeg/ffmpeg/bin/ffmpeg.exe", source=f"C:/Users/LucaN/Downloads/music/{music}"))
 		tracker.start(ctx)
 		await ctx.send("Now playing "+ str((dup_list[0])))
-		try:
-			client.add_command(repeat)
-		except:
-			pass
 
 	elif len(dup_list) > 1:
 		num = 0
@@ -909,10 +917,6 @@ async def play(ctx, song_name):
 				music = dup_list[num]+".mp3"
 				ctx.voice_client.play(discord.FFmpegPCMAudio(executable="C:/Users/LucaN/FFmpeg/ffmpeg/bin/ffmpeg.exe", source=f"C:/Users/LucaN/Downloads/music/{music}"))
 				await ctx.send("Now playing "+ str((dup_list[num])))
-				try:
-					client.add_command(repeat)
-				except:
-					pass
 				break
 			else:
 				num+=1
@@ -929,14 +933,71 @@ async def play(ctx, song_name):
 	else:
 		await ctx.send("Sorry I couldn't find that song")
 											
+@tasks.loop(count=None)
+async def playing(ctx):
+	global curr
+	global counter
+	global music
+	global q_counter
+	global n_toggle
+	global now
 
-@client.command()
+	if ctx.voice_client.is_playing() is False and ctx.voice_client.is_paused() is False:
+		q = list(queued)
+		try:
+			tracker.cancel()
+		except:
+			pass
+		now = 0	
+		music = q[curr]
+		ctx.voice_client.play(discord.FFmpegPCMAudio(executable="C:/Users/LucaN/FFmpeg/ffmpeg/bin/ffmpeg.exe", source=f"C:/Users/LucaN/Downloads/music/{music}"))
+		if not tracker.is_running():
+			tracker.start(ctx)
+		else:
+			pass
+		music2 = music.replace(".mp3", "")
+		if counter == 0:
+			await ctx.send("Now playing "+ str(music2))
+		else:
+			await ctx.send(str(music2))
+		curr += 1
+		if curr >= len(queued) or len(queued) == 1:
+			client.remove_command(skip)
+		else:
+			try:
+				client.add_command(skip)
+			except:
+				pass
+		if curr < 0:
+			curr = 0
+			client.remove_command(back)
+		else:
+			try:
+				client.add_command(back)
+			except:
+				pass				
+		counter += 1
+		if q_counter > 0:
+			q_counter -= 1
+			if q_counter == 0:
+				n_toggle = 0
+			else:
+				pass
+		else:	
+			pass	
+	else:
+		await asyncio.sleep(.1)
+
+@client.command(aliases = ['l'])
 async def leave(ctx):
 	if ctx.message.author.voice != None:
 		if ctx.voice_client != None:
 			try:
-				client.remove_command(repeat)
 				repeater.cancel()
+				ordering.cancel()
+				shuffling.cancel()
+				tracker.cancel()
+				playing.cancel()
 				await ctx.voice_client.stop()
 			except:
 				pass				
@@ -989,30 +1050,34 @@ async def toggle(ctx, mode):
 			else:
 				pass
 		counter = 1
-		try:	
-			client.add_command(back)
-			client.add_command(skip)
-			client.add_command(add)
-			client.add_command(nxt)
-		except:
-			pass	
+
+		# try:
+		# 	client.add_command(repeat)
+		# 	client.add_command(back)
+		# 	client.add_command(skip)
+		# 	client.add_command(add)
+		# 	client.add_command(nxt)
+		# except:
+		# 	pass	
 
 		if mode.lower() == "neutral" or mode.lower() == "n":
 			try:
 				shuffling.cancel()
 				ordering.cancel()
-				client.remove_command(back)
-				client.remove_command(skip)
-				client.remove_command(add)
-				client.remove_command(nxt)	
 			except:
 				pass
 			try:
 				queued.clear()
 			except:
-				pass	
+				pass
+			queued[0] = music
+			playing.start(ctx)	
 		elif mode.lower() == "order" or mode.lower() == "o":
-			shuffling.cancel()
+			try:
+				shuffling.cancel()
+				playing.cancel()
+			except:
+				pass	
 			try:
 				queued.clear()
 			except:
@@ -1022,7 +1087,12 @@ async def toggle(ctx, mode):
 			curr = queued[music]+1
 			ordering.start(ctx)
 		elif mode.lower() == "shuffle" or mode.lower() == "s":
-			ordering.cancel()
+			try:
+				ordering.cancel()
+				playing.cancel()
+				# tracker.cancel()
+			except:
+				pass	
 			try:
 				queued.clear()
 			except:
@@ -1051,14 +1121,12 @@ async def playlist(ctx, tgle, metadata):
 	pos = None
 	pos2 = None
 
-	if t.lower() != "all" or t.lower() != 'a':
+	if t.lower() is not "all" or t.lower() is not 'a':
+		print(True)
 		try:
-			shuffling.stop()
-			ordering.stop()
-			client.remove_command(skip)
-			client.remove_command(back)
-			client.remove_command(add)
-			client.remove_command(nxt)
+			shuffling.cancel()
+			ordering.cancel()
+			playing.cancel()
 		except:
 			pass
 					
@@ -1176,6 +1244,29 @@ async def playlist(ctx, tgle, metadata):
 		hub = full
 		await ctx.send("You've exited the playlist")
 
+@tasks.loop(count=None)
+async def tracker(ctx):
+	global playback
+	global now
+	audio = TinyTag.get(f"C:/Users/LucaN/Downloads/music/{music}")
+	dur = round(audio.duration)
+	
+	if ctx.voice_client.is_playing() is True:
+		now += 1
+		print(now)
+		await asyncio.sleep(1)	
+	elif ctx.voice_client.is_paused() is True:
+		await asyncio.sleep(.1)	
+	else:
+		now = 0
+		playback = False
+		tracker.cancel()
+
+	if now >= dur//2:
+		playback = True
+	else:
+		playback = False	
+
 
 @client.command(aliases=['*'])
 async def test(ctx, song_name):
@@ -1186,17 +1277,21 @@ async def test(ctx, song_name):
 	dup_list = []
 	global pos
 	global pos2
+	global queued
+	global curr
 
 	pos = None
 	pos2 = None
+	curr = 0
 
 	try:
 		shuffling.cancel()
 		ordering.cancel()
-		client.remove_command(skip)
-		client.remove_command(back)
-		client.remove_command(add)
-		client.remove_command(nxt)
+	except:
+		pass
+
+	try:
+		queued.clear()
 	except:
 		pass
 
@@ -1284,38 +1379,35 @@ async def test(ctx, song_name):
 			count = 0
 
 	if len(dup_list) == 1:
-		try:
-			if ctx.voice_client.is_playing() == True:
-				ctx.voice_client.stop()
-		except:
-			pass		
 		music = dup_list[0]+".mp3"
-		ctx.voice_client.play(discord.FFmpegPCMAudio(executable="C:/Users/LucaN/FFmpeg/ffmpeg/bin/ffmpeg.exe", source=f"C:/Users/LucaN/Downloads/music/{music}"))
-		tracker.start(ctx)
-		await ctx.send("Now playing "+ str((dup_list[0])))
-		try:
-			client.add_command(repeat)
-		except:
-			pass
+		queued[music] = 0
+		playing.start(ctx)
+		# try:
+		# 	if ctx.voice_client.is_playing() == True:
+		# 		ctx.voice_client.stop()
+		# except:
+		# 	pass		
+		# music = dup_list[0]+".mp3"
+		# ctx.voice_client.play(discord.FFmpegPCMAudio(executable="C:/Users/LucaN/FFmpeg/ffmpeg/bin/ffmpeg.exe", source=f"C:/Users/LucaN/Downloads/music/{music}"))
+		# tracker.start(ctx)
+		# await ctx.send("Now playing "+ str((dup_list[0])))
 
 	elif len(dup_list) > 1:
 		num = 0
 		while num < (len(dup_list)):
 			if len(dup_list[num]) == len(song_name):
-				try:
-					if ctx.voice_client.is_playing() == True:
-						ctx.voice_client.stop()
-				except:
-					pass		
+				# try:
+				# 	if ctx.voice_client.is_playing() == True:
+				# 		ctx.voice_client.stop()
+				# except:
+				# 	pass		
 				music = dup_list[num]+".mp3"
-				ctx.voice_client.play(discord.FFmpegPCMAudio(executable="C:/Users/LucaN/FFmpeg/ffmpeg/bin/ffmpeg.exe", source=f"C:/Users/LucaN/Downloads/music/{music}"))
-				tracker.start(ctx)
-				await ctx.send("Now playing "+ str((dup_list[num])))
-				try:
-					client.add_command(repeat)
-				except:
-					pass
-				break
+				queued[music] = 0
+				playing.start(ctx)
+				# ctx.voice_client.play(discord.FFmpegPCMAudio(executable="C:/Users/LucaN/FFmpeg/ffmpeg/bin/ffmpeg.exe", source=f"C:/Users/LucaN/Downloads/music/{music}"))
+				# tracker.start(ctx)
+				# await ctx.send("Now playing "+ str((dup_list[num])))
+				# break
 			else:
 				num+=1
 
@@ -1329,52 +1421,7 @@ async def test(ctx, song_name):
 			# await ctx.send("```**")	
 
 	else:
-		await ctx.send("Sorry I couldn't find that song")
-
-# @tasks.loop(count=None)
-# async def tracker(ctx):
-# 	global playback
-# 	audio = TinyTag.get(f"C:/Users/LucaN/Downloads/music/{music}")
-# 	then = round(audio.duration)
-# 	now = None
-
-# 	if ctx.voice_client.is_playing() is True:
-# 		now = timer()
-# 		print((round(now)))
-# 		if now is not None and (round(now)-5) >= then/2:
-# 			playback = True
-# 		else:
-# 			playback = False
-# 		print(playback)	
-# 	elif ctx.voice_client.is_paused() is True:
-# 		print("sleep")
-# 		await asyncio.sleep(.1)	
-# 	elif ctx.voice_client.is_playing() is False and ctx.voice_client.is_paused() is False:
-# 		playback = False
-# 		tracker.cancel()
-
-@tasks.loop(count=None)
-async def tracker(ctx):
-	global playback
-	global now
-	audio = TinyTag.get(f"C:/Users/LucaN/Downloads/music/{music}")
-	dur = round(audio.duration)
-	
-	if ctx.voice_client.is_playing() is True:
-		now += 1
-		await asyncio.sleep(1)	
-	elif ctx.voice_client.is_paused() is True:
-		await asyncio.sleep(.1)	
-	elif ctx.voice_client.is_playing() is False and ctx.voice_client.is_paused() is False:
-		now = 0
-		playback = False
-		tracker.cancel()
-
-	if now >= dur//2:
-		playback = True
-	else:
-		playback = False
-	print(playback)			
+		await ctx.send("Sorry I couldn't find that song")		
 
 client.run(numbers())
 
