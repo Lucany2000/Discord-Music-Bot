@@ -378,8 +378,15 @@ async def skip(ctx):
 	global curr
 	global now
 	if ctx.voice_client.is_playing() is True or ctx.voice_client.is_paused() is True:
-		now = 0
-		ctx.voice_client.stop()
+		if playing.is_running():
+			if curr >= len(queued) or len(queued) == 1:
+				await ctx.send("You're at the end of the queue")
+			else:
+				now = 0
+				ctx.voice_client.stop()	
+		else:	
+			now = 0
+			ctx.voice_client.stop()
 	else:
 		await ctx.send("Nothing is playing right now")	
 
@@ -387,14 +394,22 @@ async def skip(ctx):
 async def back(ctx):
 	global curr
 	global now
-	if ctx.voice_client.is_playing() is True or ctx.voice_client.is_paused() is True:
-		ctx.voice_client.stop()
+	if ctx.voice_client.is_playing() is True or ctx.voice_client.is_paused() is True:	
 		if playback is True:	
 			curr -= 1
 			now = 0
 		else:
 			curr -= 2
-			now = 0				
+			now = 0
+
+		if playing.is_running():
+			if curr < 0:
+				curr = 0
+				await ctx.send("You're at the beginning of the queue")
+			else:
+				ctx.voice_client.stop()	
+		else:
+			ctx.voice_client.stop()							
 	else:
 		await ctx.send("Nothing is playing right now")
 
@@ -503,30 +518,37 @@ async def add(ctx, *args):
 			while num < (len(dup_list)):
 				if len(dup_list[num]) == len(song_name):			
 					nxt_s = dup_list[num]+".mp3"
-					update = queued
-					og = update[nxt_s]
-					if curr != og:
-						if curr < og:
-							update[nxt_s] = curr + q_counter	
-							for kur in update:
-								if (curr+q_counter) <= update[kur] < og and kur != nxt_s:
-									update[kur] = update[kur]+1
-								else:
-									pass
-						elif curr > og: 
-							update[nxt_s] = (curr-1) + q_counter
-							for kur in update:
-								if og < update[kur] < (curr+q_counter) and kur != nxt_s:
-									update[kur] = update[kur]-1
-								else:
-									pass
-							curr -= 1
+					if f'{nxt_s}' in queued:
+						update = queued
+						og = update[nxt_s]
+						if curr != og:
+							if curr < og:
+								update[nxt_s] = curr + q_counter	
+								for kur in update:
+									if (curr+q_counter) <= update[kur] < og and kur != nxt_s:
+										update[kur] = update[kur]+1
+									else:
+										pass
+							elif curr > og: 
+								update[nxt_s] = (curr-1) + q_counter
+								for kur in update:
+									if og < update[kur] < (curr+q_counter) and kur != nxt_s:
+										update[kur] = update[kur]-1
+									else:
+										pass
+								curr -= 1
+							q_counter += 1									
+							await asyncio.sleep(.1)	
+							queue = sorted(update.items(), key=lambda x:x[1])
+							queued = dict(queue)
+						else:
+							q_counter += 1
+					else:
+						queued[nxt_s] = curr + q_counter
 						q_counter += 1									
 						await asyncio.sleep(.1)	
-						queue = sorted(update.items(), key=lambda x:x[1])
-						queued = dict(queue)
-					else:
-						q_counter += 1	
+						queue = sorted(queued.items(), key=lambda x:x[1])
+						queued = dict(queue)			
 					break
 				else:
 					num+=1
@@ -541,30 +563,37 @@ async def add(ctx, *args):
 
 		elif len(dup_list) == 1:		
 			nxt_s = dup_list[0]+".mp3"
-			update = queued
-			og = update[nxt_s]
-			if curr != og:
-				if curr < og:
-					update[nxt_s] = curr + q_counter
-					for kur in update:
-						if (curr+q_counter) <= update[kur] < og and kur != nxt_s:
-							update[kur] = update[kur]+1
-						else:
-							pass
-				elif curr > og:
-					update[nxt_s] = (curr-1) + q_counter
-					for kur in update:
-						if og < update[kur] < (curr+q_counter) and kur != nxt_s:
-							update[kur] = update[kur]-1
-						else:
-							pass
-					curr -= 1
+			if f'{nxt_s}' in queued:
+				update = queued
+				og = update[nxt_s]
+				if curr != og:
+					if curr < og:
+						update[nxt_s] = curr + q_counter
+						for kur in update:
+							if (curr+q_counter) <= update[kur] < og and kur != nxt_s:
+								update[kur] = update[kur]+1
+							else:
+								pass
+					elif curr > og:
+						update[nxt_s] = (curr-1) + q_counter
+						for kur in update:
+							if og < update[kur] < (curr+q_counter) and kur != nxt_s:
+								update[kur] = update[kur]-1
+							else:
+								pass
+						curr -= 1
+					q_counter += 1									
+					await asyncio.sleep(.1)	
+					queue = sorted(update.items(), key=lambda x:x[1])
+					queued = dict(queue)		
+				else:
+					q_counter += 1
+			else:
+				queued[nxt_s] = curr + q_counter
 				q_counter += 1									
 				await asyncio.sleep(.1)	
-				queue = sorted(update.items(), key=lambda x:x[1])
-				queued = dict(queue)		
-			else:
-				q_counter += 1					
+				queue = sorted(queued.items(), key=lambda x:x[1])
+				queued = dict(queue)						
 		else:
 			await ctx.send("Sorry I couldn't find that song")
 
@@ -667,33 +696,46 @@ async def nxt(ctx, *args):
 		while num < (len(dup_list)):
 			if len(dup_list[num]) == len(song_name):			
 				nxt_s = dup_list[num]+".mp3"
-				update = queued
-				og = update[nxt_s]
-				if curr != og:
-					if curr < og:
-						update[nxt_s] = curr	
-						for kur in update:
-							if curr <= update[kur] < og and kur != nxt_s:
-								update[kur] = update[kur]+1
-							else:
-								pass
-					elif curr > og: 
-						update[nxt_s] = curr -1
-						for kur in update:
-							if og < update[kur] < curr and kur != nxt_s:
-								update[kur] = update[kur]-1
-							else:
-								pass
-						curr -= 1
+				if f'{nxt_s}' in queued:
+					update = queued
+					og = update[nxt_s]
+					if curr != og:
+						if curr < og:
+							update[nxt_s] = curr	
+							for kur in update:
+								if curr <= update[kur] < og and kur != nxt_s:
+									update[kur] = update[kur]+1
+								else:
+									pass
+						elif curr > og: 
+							update[nxt_s] = curr -1
+							for kur in update:
+								if og < update[kur] < curr and kur != nxt_s:
+									update[kur] = update[kur]-1
+								else:
+									pass
+							curr -= 1
+						if q_counter != 1:
+							q_counter += 1
+						else:
+							pass										
+						await asyncio.sleep(.1)	
+						queue = sorted(update.items(), key=lambda x:x[1])
+						queued = dict(queue)
+					else:
+						pass
+				else:
 					if q_counter != 1:
 						q_counter += 1
 					else:
 						pass										
 					await asyncio.sleep(.1)	
-					queue = sorted(update.items(), key=lambda x:x[1])
+					queue = sorted(queued.items(), key=lambda x:x[1])
+					queue.insert(curr, (f'{nxt_s}',curr))
+					for inc in range(curr+1, len(queue)):
+						queue[inc] = list(queue[inc])
+						queue[inc][1] += 1
 					queued = dict(queue)
-				else:
-					pass	
 				break
 			else:
 				num+=1
@@ -708,33 +750,46 @@ async def nxt(ctx, *args):
 
 	elif len(dup_list) == 1:		
 		nxt_s = dup_list[0]+".mp3"
-		update = queued
-		og = update[nxt_s]
-		if curr != og:	
-			if curr < og:
-				update[nxt_s] = curr	
-				for kur in update:
-					if curr <= update[kur] < og and kur != nxt_s:
-						update[kur] = update[kur]+1
-					else:
-						pass
-			elif curr > og:
-				update[nxt_s] = curr - 1
-				for kur in update:
-					if og < update[kur] < curr and kur != nxt_s:
-						update[kur] = update[kur]-1
-					else:
-						pass
-				curr -= 1
-			if n_toggle == 1:
+		if f'{nxt_s}' in queued:
+			update = queued
+			og = update[nxt_s]
+			if curr != og:	
+				if curr < og:
+					update[nxt_s] = curr	
+					for kur in update:
+						if curr <= update[kur] < og and kur != nxt_s:
+							update[kur] = update[kur]+1
+						else:
+							pass
+				elif curr > og:
+					update[nxt_s] = curr - 1
+					for kur in update:
+						if og < update[kur] < curr and kur != nxt_s:
+							update[kur] = update[kur]-1
+						else:
+							pass
+					curr -= 1
+				if n_toggle == 1:
+					q_counter += 1
+				else:
+					pass											
+				await asyncio.sleep(.1)	
+				queue = sorted(update.items(), key=lambda x:x[1])
+				queued = dict(queue)		
+			else:
+				pass
+		else:
+			if q_counter != 1:
 				q_counter += 1
 			else:
-				pass											
+				pass										
 			await asyncio.sleep(.1)	
-			queue = sorted(update.items(), key=lambda x:x[1])
-			queued = dict(queue)		
-		else:
-			pass					
+			queue = sorted(queued.items(), key=lambda x:x[1])
+			queue.insert(curr, (f'{nxt_s}',curr))
+			for inc in range(curr+1, len(queue)):
+				queue[inc] = list(queue[inc])
+				queue[inc][1] += 1
+			queued = dict(queue)					
 	else:
 		await ctx.send("Sorry I couldn't find that song")
 
@@ -964,22 +1019,7 @@ async def playing(ctx):
 			await ctx.send("Now playing "+ str(music2))
 		else:
 			await ctx.send(str(music2))
-		curr += 1
-		if curr == len(queued) or len(queued) == 1:
-			client.remove_command(skip)
-		else:
-			try:
-				client.add_command(skip)
-			except:
-				pass
-		if curr < 0:
-			curr = 0
-			client.remove_command(back)
-		else:
-			try:
-				client.add_command(back)
-			except:
-				pass				
+		curr += 1				
 		counter += 1
 		if q_counter > 0:
 			q_counter -= 1
