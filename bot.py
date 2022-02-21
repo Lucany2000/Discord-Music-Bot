@@ -227,8 +227,10 @@ async def order(ctx):
 	for x in queue:
 		queued[x] = queue.index(x)	
 
-
-	ordering.start(ctx)
+	if not ordering.is_running():
+		ordering.start(ctx)
+	else:
+		ordering.restart(ctx)	
 											
 
 @tasks.loop(count=None)
@@ -315,19 +317,19 @@ async def shuffle(ctx):
 	else:
 		await ctx.send("You are not in the channel")
 
-	for b in hub:
-		if b.endswith(".mp3"):
-			queue.append(b)
-		else:
-			pass
 
+	for b in hub:
+		queue.append(b)
+	
 	random.shuffle(queue)
 
 	for x in queue:
 		queued[x] = queue.index(x)
 	
-
-	shuffling.start(ctx)
+	if not shuffling.is_running():
+		shuffling.start(ctx)
+	else:
+		shuffling.restart(ctx)	
 
 @tasks.loop(count=None)
 async def shuffling(ctx):
@@ -1079,7 +1081,7 @@ async def resume(ctx):
 	else:
 		await ctx.send("You are not in the channel")
 
-@client.command(alias = ['t'])
+@client.command(aliases = ['t'])
 async def toggle(ctx, mode):
 	global tog
 	global queued
@@ -1152,9 +1154,9 @@ async def toggle(ctx, mode):
 	else:
 		await ctx.send("There's nothing playing")
 
-@client.command(alias = ['pl'])
-async def playlist(ctx, tgle, metadata):
-	meta = metadata
+@client.command(aliases = ['pl'])
+async def playlist(ctx, tgle, *args):
+	meta = " ".join(args[:])
 	t = tgle
 	song_list = []
 	dup_list = []
@@ -1165,8 +1167,10 @@ async def playlist(ctx, tgle, metadata):
 	pos = None
 	pos2 = None
 
-	if t.lower() is not "all" or t.lower() is not 'a':
-		print(True)
+	if ('all' in t.lower()) or ('all' in meta.lower()):
+		hub = full
+		await ctx.send("You've exited the playlist")
+	else:		
 		try:
 			shuffling.cancel()
 			ordering.cancel()
@@ -1238,18 +1242,25 @@ async def playlist(ctx, tgle, metadata):
 			else:
 				count = 0
 
+		dup_list = set(dup_list)
+		dup_list = list(dup_list)
+
 		if len(dup_list) == 1:
 			if dup_list[0] != " " or dup_list[0] != None:
-				hub.clear()
-				for z in full:
-					audio = TinyTag.get(f"C:/Users/LucaN/Downloads/music/{z}")
+				hub = []	
+				for z in range(len(full)):
+					audio = TinyTag.get(f"C:/Users/LucaN/Downloads/music/{full[z]}")
 					if t.lower() == "artist":
 						if audio.artist == dup_list[0]:
-							hub.append(z)
+							hub.append(full[z])
+						else:
+							pass	
 					elif t.lower() == "album":
 						if audio.album == dup_list[0]:
-							hub.append(z)
-					await ctx.send(f"You're now in playlist {dup_list[0]}")		
+							hub.append(full[z])
+						else:
+							pass						
+				await ctx.send(f"You're now in playlist: {dup_list[0]}")		
 			else:
 				await ctx.send("Sorry I couldn't find that Artist/Album")						
 
@@ -1258,18 +1269,23 @@ async def playlist(ctx, tgle, metadata):
 			while num < (len(dup_list)):
 				if len(dup_list[num]) == len(meta):
 					if dup_list[num] != " " or dup_list[num] != None:
-						hub.clear()
-						for z in full:
-							audio = TinyTag.get(f"C:/Users/LucaN/Downloads/music/{z}")
+						hub = []
+						for z in range(len(full)):
+							audio = TinyTag.get(f"C:/Users/LucaN/Downloads/music/{full[z]}")
 							if t.lower() == "artist":
 								if audio.artist == dup_list[num]:
-									hub.append(z)
+									hub.append(full[z])
+								else:
+									pass	
 							elif t.lower() == "album":
 								if audio.album == dup_list[num]:
-									hub.append(z)
-							await ctx.send(f"You're now in playlist {dup_list[num]}")		
-						else:
-							await  ctx.send("Sorry I couldn't find that Artist/Album")				
+									hub.append(full[z])
+								else:
+									pass		
+						await ctx.send(f"You're now in playlist: {dup_list[num]}")		
+					else:
+						await  ctx.send("Sorry I couldn't find that Artist/Album")
+					break					
 				else:
 					num+=1
 
@@ -1284,9 +1300,6 @@ async def playlist(ctx, tgle, metadata):
 
 		else:
 			await ctx.send("Sorry I couldn't find that Artist/Album")
-	else:
-		hub = full
-		await ctx.send("You've exited the playlist")
 
 @tasks.loop(count=None)
 async def tracker(ctx):
@@ -1441,15 +1454,6 @@ async def test(ctx, *args):
 			playing.start(ctx)
 		else:
 			playing.restart(ctx)	
-		# try:
-		# 	if ctx.voice_client.is_playing() == True:
-		# 		ctx.voice_client.stop()
-		# except:
-		# 	pass		
-		# music = dup_list[0]+".mp3"
-		# ctx.voice_client.play(discord.FFmpegPCMAudio(executable="C:/Users/LucaN/FFmpeg/ffmpeg/bin/ffmpeg.exe", source=f"C:/Users/LucaN/Downloads/music/{music}"))
-		# tracker.start(ctx)
-		# await ctx.send("Now playing "+ str((dup_list[0])))
 
 	elif len(dup_list) > 1:
 		num = 0
@@ -1467,10 +1471,6 @@ async def test(ctx, *args):
 				else:
 					playing.restart(ctx)
 				break
-				# ctx.voice_client.play(discord.FFmpegPCMAudio(executable="C:/Users/LucaN/FFmpeg/ffmpeg/bin/ffmpeg.exe", source=f"C:/Users/LucaN/Downloads/music/{music}"))
-				# tracker.start(ctx)
-				# await ctx.send("Now playing "+ str((dup_list[num])))
-				# break
 			else:
 				num+=1
 
