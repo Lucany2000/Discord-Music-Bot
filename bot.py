@@ -147,7 +147,7 @@ async def repeater(ctx):
 	global now
 	if ctx.voice_client.is_playing() is False and ctx.voice_client.is_paused() is False:
 		now = 0
-		ctx.voice_client.play(discord.FFmpegPCMAudio(executable="C:/Users/LucaN/FFmpeg/ffmpeg/bin/ffmpeg.exe", source=f"C:/Users/LucaN/Downloads/music/{music}"))
+		ctx.voice_client.play(discord.FFmpegPCMAudio(executable="FFmpeg/ffmpeg/bin/ffmpeg.exe", source=f"C:/Users/LucaN/Downloads/music/{music}"))
 		if not tracker.is_running():
 			tracker.start(ctx)
 		else:
@@ -250,7 +250,7 @@ async def ordering(ctx):
 			pass
 		now = 0	
 		music = queue[curr]
-		ctx.voice_client.play(discord.FFmpegPCMAudio(executable="C:/Users/LucaN/FFmpeg/ffmpeg/bin/ffmpeg.exe", source=f"C:/Users/LucaN/Downloads/music/{music}"))
+		ctx.voice_client.play(discord.FFmpegPCMAudio(executable="FFmpeg/ffmpeg/bin/ffmpeg.exe", source=f"C:/Users/LucaN/Downloads/music/{music}"))
 		if not tracker.is_running():
 			tracker.start(ctx)
 		else:
@@ -264,10 +264,10 @@ async def ordering(ctx):
 		counter += 1
 		if q_counter > 0:
 			q_counter -= 1
-			if q_counter == 0:
-				n_toggle = 0
-			else:
-				pass
+			# if q_counter == 0:
+			# 	n_toggle = 0
+			# else:
+			# 	pass
 		else:	
 			pass
 		if curr > (len(queued)-1):	
@@ -348,7 +348,7 @@ async def shuffling(ctx):
 			pass
 		now = 0
 		music = queue[curr]
-		ctx.voice_client.play(discord.FFmpegPCMAudio(executable="C:/Users/LucaN/FFmpeg/ffmpeg/bin/ffmpeg.exe", source=f"C:/Users/LucaN/Downloads/music/{music}"))	
+		ctx.voice_client.play(discord.FFmpegPCMAudio(executable="FFmpeg/ffmpeg/bin/ffmpeg.exe", source=f"C:/Users/LucaN/Downloads/music/{music}"))	
 		if not tracker.is_running():
 			tracker.start(ctx)
 		else:
@@ -362,10 +362,10 @@ async def shuffling(ctx):
 		counter += 1
 		if q_counter > 0:
 			q_counter -= 1
-			if q_counter == 0:
-				n_toggle = 0
-			else:
-				pass
+			# if q_counter == 0:
+			# 	n_toggle = 0
+			# else:
+			# 	pass
 		else:	
 			pass	
 		if curr > (len(queued)-1):	
@@ -435,7 +435,7 @@ async def add(ctx, *args):
 	song_name = " ".join(args[:])
 
 	if q_counter == 0:
-		n_toggle = 1
+		# n_toggle = 1
 		await ctx.invoke(nxt, *args)
 	else:				
 		word2 = [char for char in song_name]
@@ -560,8 +560,8 @@ async def add(ctx, *args):
 				for l in dup_list:
 					await ctx.send(str(l))			
 
-		elif len(dup_list) > 75:
-			await ctx.send("Sorry I couldn't find that song")
+		# elif len(dup_list) > 75:
+		# 	await ctx.send("Sorry I couldn't find that song")
 
 		elif len(dup_list) == 1:		
 			nxt_s = dup_list[0]+".mp3"
@@ -717,20 +717,20 @@ async def nxt(ctx, *args):
 								else:
 									pass
 							curr -= 1
-						if q_counter != 1:
-							q_counter += 1
-						else:
-							pass										
+						# if q_counter != 1:
+						q_counter += 1
+						# else:
+						# 	pass									
 						await asyncio.sleep(.1)	
 						queue = sorted(update.items(), key=lambda x:x[1])
 						queued = dict(queue)
 					else:
 						pass
 				else:
-					if q_counter != 1:
-						q_counter += 1
-					else:
-						pass										
+					# if q_counter != 1:
+					q_counter += 1
+					# else:
+					# 	pass										
 					await asyncio.sleep(.1)	
 					queue = sorted(queued.items(), key=lambda x:x[1])
 					queue.insert(curr, (f'{nxt_s}',curr))
@@ -747,8 +747,8 @@ async def nxt(ctx, *args):
 			for l in dup_list:
 				await ctx.send(str(l))			
 
-	elif len(dup_list) > 75:
-		await ctx.send("Sorry I couldn't find that song")
+	# elif len(dup_list) > 75:
+	# 	await ctx.send("Sorry I couldn't find that song")
 
 	elif len(dup_list) == 1:		
 		nxt_s = dup_list[0]+".mp3"
@@ -771,10 +771,10 @@ async def nxt(ctx, *args):
 						else:
 							pass
 					curr -= 1
-				if n_toggle == 1:
-					q_counter += 1
-				else:
-					pass											
+				# if n_toggle == 1:
+				q_counter += 1
+				# else:
+				# 	pass											
 				await asyncio.sleep(.1)	
 				queue = sorted(update.items(), key=lambda x:x[1])
 				queued = dict(queue)		
@@ -1011,7 +1011,7 @@ async def playing(ctx):
 		q = list(queued)
 		now = 0	
 		music = q[curr]
-		ctx.voice_client.play(discord.FFmpegPCMAudio(executable="C:/Users/LucaN/FFmpeg/ffmpeg/bin/ffmpeg.exe", source=f"C:/Users/LucaN/Downloads/music/{music}"))
+		ctx.voice_client.play(discord.FFmpegPCMAudio(executable="FFmpeg/ffmpeg/bin/ffmpeg.exe", source=f"C:/Users/LucaN/Downloads/music/{music}"))
 		if not tracker.is_running():
 			tracker.start(ctx)
 		else:
@@ -1025,10 +1025,10 @@ async def playing(ctx):
 		counter += 1
 		if q_counter > 0:
 			q_counter -= 1
-			if q_counter == 0:
-				n_toggle = 0
-			else:
-				pass
+			# if q_counter == 0:
+			# 	n_toggle = 0
+			# else:
+			# 	pass
 		else:	
 			pass	
 	else:
@@ -1087,6 +1087,7 @@ async def toggle(ctx, mode):
 	global queued
 	global curr
 	global counter
+	global q_counter
 	queue = []
 
 	if ctx.voice_client.is_playing() is True or ctx.voice_client.is_paused() is True:
@@ -1116,6 +1117,7 @@ async def toggle(ctx, mode):
 				queued.clear()
 			except:
 				pass
+			q_counter = 0
 			queued[0] = music
 			playing.start(ctx)	
 		elif mode.lower() == "order" or mode.lower() == "o":
@@ -1130,6 +1132,7 @@ async def toggle(ctx, mode):
 				pass
 			for x in queue:
 				queued[x] = queue.index(x)
+			q_counter = 0	
 			curr = queued[music]+1
 			ordering.start(ctx)
 		elif mode.lower() == "shuffle" or mode.lower() == "s":
@@ -1144,6 +1147,7 @@ async def toggle(ctx, mode):
 			except:
 				pass
 			curr = 1
+			q_counter = 0
 			random.shuffle(queue)
 			queue.insert(0, queue.pop(queue.index(music)))
 			for x in queue:
